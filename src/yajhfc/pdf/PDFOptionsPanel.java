@@ -17,10 +17,13 @@
  */
 package yajhfc.pdf;
 
-import static yajhfc.pdf.EntryPoint._;
+import static yajhfc.pdf.i18n.Msgs._;
+import info.clearthought.layout.TableLayout;
 
 import java.awt.Dimension;
-import java.awt.FlowLayout;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.text.MessageFormat;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -30,8 +33,10 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import yajhfc.FaxOptions;
+import yajhfc.file.FileConverters;
 import yajhfc.options.AbstractOptionsPanel;
 import yajhfc.options.OptionsWin;
+import yajhfc.options.PathAndViewPanel;
 
 import com.itextpdf.text.Document;
 
@@ -50,13 +55,24 @@ public class PDFOptionsPanel extends AbstractOptionsPanel<FaxOptions> {
     JCheckBox checkUseForTIFF, checkUseForPNG, checkUseForJPEG, checkUseForGIF;
     
     @Override
-    protected void createOptionsUI() {    
-        checkUseForTIFF = new JCheckBox(_("Use iText to convert TIFF->PDF"));
-        checkUseForPNG = new JCheckBox(_("Use iText to convert PNG->PDF"));
-        checkUseForGIF = new JCheckBox(_("Use iText to convert GIF->PDF"));
-        checkUseForJPEG = new JCheckBox(_("Use iText to convert JPEG->PDF"));
+    protected void createOptionsUI() {
+        MessageFormat convFormat = new MessageFormat(_("Use iText to convert {0}→PDF"));
+        checkUseForTIFF = new JCheckBox(convFormat.format(new Object[] {"TIFF"}));
+        checkUseForTIFF.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                PathAndViewPanel.requireTIFF2PDF = !checkUseForTIFF.isSelected();
+            }
+        });
+        checkUseForPNG = new JCheckBox(convFormat.format(new Object[] {"PNG"}));
+        checkUseForGIF = new JCheckBox(convFormat.format(new Object[] {"GIF"}));
+        checkUseForJPEG = new JCheckBox(convFormat.format(new Object[] {"JPEG"}));
         
-    	setLayout(new FlowLayout(FlowLayout.LEFT, OptionsWin.border, OptionsWin.border));
+        double[][] dLay = {
+                {OptionsWin.border, TableLayout.PREFERRED, TableLayout.FILL, OptionsWin.border},
+                {OptionsWin.border, TableLayout.PREFERRED,OptionsWin.border, TableLayout.PREFERRED, TableLayout.PREFERRED, TableLayout.FILL, OptionsWin.border}
+        };
+    	setLayout(new TableLayout(dLay));
     	
     	JPanel checkBoxPanel = new JPanel();
     	checkBoxPanel.setLayout(new BoxLayout(checkBoxPanel, BoxLayout.Y_AXIS));
@@ -73,12 +89,9 @@ public class PDFOptionsPanel extends AbstractOptionsPanel<FaxOptions> {
         checkBoxPanel.add(Box.createRigidArea(spacer));
         checkBoxPanel.add(checkUseForTIFF);
         
-        Box versionInfo = Box.createVerticalBox();
-        versionInfo.add(new JLabel("iText version:"));
-        versionInfo.add(new JLabel(Document.getVersion()));
-        
-        add(checkBoxPanel);
-        add(versionInfo);
+        add(checkBoxPanel, "1,1,1,1,f,t");
+        add(new JLabel(_("iText version used:")), "1,3,1,3,l,t");
+        add(new JLabel(Document.getVersion()), "1,4,1,4,l,t");
     }
     
     /* (non-Javadoc)
@@ -91,6 +104,8 @@ public class PDFOptionsPanel extends AbstractOptionsPanel<FaxOptions> {
         checkUseForPNG.setSelected(pdfOpt.useITextForPNG);
         checkUseForJPEG.setSelected(pdfOpt.useITextForJPEG);
         checkUseForTIFF.setSelected(pdfOpt.useITextForTIFF);
+        
+        PathAndViewPanel.requireTIFF2PDF = !pdfOpt.useITextForTIFF;
     }
 
     /* (non-Javadoc)
@@ -103,13 +118,8 @@ public class PDFOptionsPanel extends AbstractOptionsPanel<FaxOptions> {
         pdfOpt.useITextForPNG = checkUseForPNG.isSelected();
         pdfOpt.useITextForJPEG = checkUseForJPEG.isSelected();
         pdfOpt.useITextForTIFF = checkUseForTIFF.isSelected();
-    }
-
-    /* (non-Javadoc)
-     * @see yajhfc.options.OptionsPage#validateSettings(yajhfc.options.OptionsWin)
-     */
-    public boolean validateSettings(OptionsWin optionsWin) {
-        return true;
+        
+        FileConverters.invalidateFileConverters();
     }
 
 }

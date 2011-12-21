@@ -29,7 +29,9 @@ public class ITextTIFFFileConverter implements FileConverter {
     throws ConversionException, IOException {
         try {
             log.fine("Converting " + inFile + " to PDF using itext");
-            Document document = new Document(PageSize.getRectangle(paperSize.name()), 0, 0, 0, 0);
+            
+            final Rectangle pageSize = PageSize.getRectangle(paperSize.name());
+            Document document = new Document(pageSize, 0, 0, 0, 0);
             PdfWriter writer = PdfWriter.getInstance(document, destination);
             document.addCreator(Utils.AppShortName + " " + Utils.AppVersion);
             document.addSubject(inFile.getPath());
@@ -43,21 +45,55 @@ public class ITextTIFFFileConverter implements FileConverter {
                 if (img != null) {
                     log.fine("Writing page " + (pg + 1));
                     if (Utils.getFaxOptions().usePaperSizeForTIFF2Any) {
-                        img.scaleToFit(document.right()-document.left(), document.top()-document.bottom());
+                        scaleImageToFit(document, img, pageSize);
                     } else {
-                        img.scalePercent(7200f / img.getDpiX(), 7200f / img.getDpiY());
                         img.setAbsolutePosition(0, 0);
+                        img.scalePercent(7200f / img.getDpiX(), 7200f / img.getDpiY());
                         document.setPageSize(new Rectangle(img.getScaledWidth(), img.getScaledHeight()));
                     }
-                    cb.addImage(img);
                     document.newPage();
+                    cb.addImage(img);
+                    //document.newPage();
                 }
             }
             ra.close();
             document.close();
         } catch (DocumentException e) {
-            throw new ConversionException("DocumentException from itext received", e);
+            throw new ConversionException("DocumentException from iText received", e);
         }
+    }
+
+    /**
+     * Scales the given image to fit the given page size and positions it vertically on top and horizontally centered.
+     * Switches the document's page size between landscape and portrait to make the image as large as possible.
+     * @param document
+     * @param img
+     * @param pageSize
+     */
+    public static void scaleImageToFit(Document document, Image img, final Rectangle pageSize) {
+        float dpiFactor;
+        if (img.getDpiX() > 0 && img.getDpiY() > 0)
+            dpiFactor = (float)img.getDpiX() / (float)img.getDpiY();
+        else
+            dpiFactor = 1f;
+        
+        float imgWidth = img.getWidth();
+        float imgHeight = img.getHeight() * dpiFactor;
+        
+        if (imgWidth > imgHeight) {
+            document.setPageSize(pageSize.rotate());
+        } else {
+            document.setPageSize(pageSize);
+        }                        
+        float docWidth = document.right()-document.left();
+        float docHeight = document.top()-document.bottom();
+        float scaleFactor = Math.min(docWidth/imgWidth, docHeight/imgHeight);
+        
+        img.scaleAbsolute(imgWidth * scaleFactor, imgHeight * scaleFactor);
+        img.setAbsolutePosition(
+                (document.left() + document.right() - img.getScaledWidth()) * 0.5f,
+                 document.top() - img.getScaledHeight()
+                );
     }
 
     @Override

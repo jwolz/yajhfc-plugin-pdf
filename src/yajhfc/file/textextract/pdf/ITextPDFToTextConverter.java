@@ -18,7 +18,7 @@ import com.itextpdf.text.pdf.PdfReader;
 import com.itextpdf.text.pdf.parser.PdfTextExtractor;
 
 public class ITextPDFToTextConverter extends HylaToTextConverter {
-
+    
     @Override
     public String getDescription() {
         return "iText";
@@ -48,21 +48,30 @@ public class ITextPDFToTextConverter extends HylaToTextConverter {
         for (int i=0; i<args.length; i++) {
             files.add(new FormattedFile(args[i]));
         }
+        List<String> out = new ArrayList<String>();
         System.out.println("================================================================================");
         System.out.println("pdftotext");
         System.out.println("================================================================================");
-        System.out.println(new FaxnumberExtractor(new PDFToTextConverter()).extractFromMultipleFiles(files));
+        out.clear();
+        new FaxnumberExtractor(new PDFToTextConverter()).extractFromMultipleFiles(files, out);
+        System.out.println(out);
         System.out.println("================================================================================");
         System.out.println("ps2ascii");
         System.out.println("================================================================================");
-        System.out.println(new FaxnumberExtractor(new PSToAsciiConverter()).extractFromMultipleFiles(files));
+        out.clear();
+        new FaxnumberExtractor(new PSToAsciiConverter()).extractFromMultipleFiles(files, out);
+        System.out.println(out);
         System.out.println("================================================================================");
         System.out.println("pstotext");
         System.out.println("================================================================================");
-        System.out.println(new FaxnumberExtractor(new PSToTextConverter()).extractFromMultipleFiles(files));
+        out.clear();
+        new FaxnumberExtractor(new PSToTextConverter()).extractFromMultipleFiles(files, out);
+        System.out.println(out);
         System.out.println("================================================================================");
         System.out.println("iText");
         System.out.println("================================================================================");
-        System.out.println(new FaxnumberExtractor(new ITextPDFToTextConverter()).extractFromMultipleFiles(files));
+        out.clear();
+        new FaxnumberExtractor(new ITextPDFToTextConverter()).extractFromMultipleFiles(files, out);
+        System.out.println(out);
     }
 }

@@ -4,8 +4,11 @@ package yajhfc.pdf;
 import java.net.URL;
 import java.util.Map;
 import java.util.Properties;
+import java.util.logging.Logger;
 
 import javax.swing.ImageIcon;
+
+import com.itextpdf.text.Document;
 
 import yajhfc.Utils;
 import yajhfc.faxcover.Faxcover;
@@ -20,6 +23,7 @@ import yajhfc.file.textextract.HylaToTextConverter;
 import yajhfc.file.textextract.pdf.ITextPDFToTextConverter;
 import yajhfc.launch.Launcher2;
 import yajhfc.options.PanelTreeNode;
+import yajhfc.pdf.i18n.Msgs;
 import yajhfc.plugin.PluginManager;
 import yajhfc.plugin.PluginUI;
 
@@ -42,6 +46,10 @@ public class EntryPoint {
 	 * @return true if the initialization was successful, false otherwise.
 	 */
 	public static boolean init(int startupMode) {
+	    if (Utils.debugMode) {
+	        Logger.getLogger(EntryPoint.class.getName()).info("iText version: " + Document.getVersion());
+	    }
+	    
 	    Faxcover.supportedCoverFormats.put(FileFormat.PDF, PDFFaxcover.class);
 	    
 	    FileConverters.addFileConverterSource(new FileConverterSource() {
@@ -80,7 +88,7 @@ public class EntryPoint {
                         parent, // Always pass the parent as first parameter
                         new PDFOptionsPanel(), // The actual UI component that implements the options panel. 
                                                 // This object *must* implement the OptionsPage interface.
-                        _("PDF support (iText)"), // The text displayed in the tree view for this options page
+                        Msgs._("PDF support (iText)"), // The text displayed in the tree view for this options page
                         loadIcon("pdf.png"));            // The icon displayed in the tree view for this options page
 	        }
 	        
@@ -91,10 +99,6 @@ public class EntryPoint {
         });
 	    
 		return true;
-	}
-	
-	public static String _(String key) {
-	    return key;
 	}
 	
     public static ImageIcon loadIcon(String fileName) {

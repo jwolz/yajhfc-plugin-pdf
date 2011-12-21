@@ -18,6 +18,7 @@ import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.Image;
 import com.itextpdf.text.PageSize;
+import com.itextpdf.text.Rectangle;
 import com.itextpdf.text.pdf.PdfWriter;
 
 /**
@@ -36,24 +37,26 @@ public class ITextImageFileConverter implements FileConverter {
             throws ConversionException, IOException {
         try {
             log.fine("Converting " + inFile + " to PDF using itext...");
-            Document document = new Document(PageSize.getRectangle(paperSize.name()));  
+            final Rectangle pageSize = PageSize.getRectangle(paperSize.name());
+            Document document = new Document(pageSize);  
             PdfWriter writer = PdfWriter.getInstance(document, destination);  
             document.addCreator(Utils.AppShortName + " " + Utils.AppVersion);
             document.addSubject(inFile.getPath());
             writer.setStrictImageSequence(true);  
             document.open();  
             Image img = Image.getInstance(inFile.getPath());  
-            log.fine("Document dimensions are: bottom: " + document.bottom() + "; top: " + document.top() + "; left: " + document.left() + "; right: " + document.right());
-            img.scaleToFit(document.right()-document.left(), document.top()-document.bottom());
+            ITextTIFFFileConverter.scaleImageToFit(document, img, pageSize);
+            document.newPage();
             document.add(img);  
             document.close();
         } catch (BadElementException e) {
-            throw new ConversionException("BadElementException from itext received", e);
+            throw new ConversionException("BadElementException from iText received", e);
         } catch (DocumentException e) {
-            throw new ConversionException("DocumentException from itext received", e);
+            throw new ConversionException("DocumentException from iText received", e);
         }   
     }
 
+    
     /* (non-Javadoc)
      * @see yajhfc.file.FileConverter#isOverridable()
      */
