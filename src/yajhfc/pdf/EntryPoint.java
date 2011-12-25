@@ -1,14 +1,30 @@
+/*
+ * YAJHFC - Yet another Java Hylafax client
+ * Copyright (C) 2011 Jonas Wolz
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package yajhfc.pdf;
 
 
 import java.net.URL;
 import java.util.Map;
 import java.util.Properties;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.swing.ImageIcon;
-
-import com.itextpdf.text.Document;
 
 import yajhfc.Utils;
 import yajhfc.faxcover.Faxcover;
@@ -26,6 +42,8 @@ import yajhfc.options.PanelTreeNode;
 import yajhfc.pdf.i18n.Msgs;
 import yajhfc.plugin.PluginManager;
 import yajhfc.plugin.PluginUI;
+
+import com.itextpdf.text.Document;
 
 /**
  * Example initialization class for a YajHFC plugin.
@@ -54,9 +72,15 @@ public class EntryPoint {
 	    
 	    FileConverters.addFileConverterSource(new FileConverterSource() {
 	        @Override
-	        public void addFileConvertersTo(Map<FileFormat, FileConverter> converters) {
-	            PDFOptions options = getOptions();
+	        public void addFileConvertersTo(Map<FileFormat, FileConverter> converters) {	            
+	            try {
+                    Document.getVersion();
+                } catch (Throwable e) {
+                    Logger.getLogger(EntryPoint.class.getName()).log(Level.SEVERE, "Could not initialize iText", e);
+                    return;
+                }
 	            
+	            PDFOptions options = getOptions();
 	            if (options.useITextForTIFF)
 	                converters.put(FileFormat.TIFF, new ITextTIFFFileConverter());
 	            
@@ -98,6 +122,7 @@ public class EntryPoint {
 	        }
         });
 	    
+	    FileConverters.invalidateFileConverters();
 		return true;
 	}
 	

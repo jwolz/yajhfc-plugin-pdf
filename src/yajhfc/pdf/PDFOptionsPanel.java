@@ -1,6 +1,6 @@
 /*
  * YajHFC - Yet another Java Hylafax client
- * Copyright (C) 2009 Jonas Wolz
+ * Copyright (C) 2011 Jonas Wolz
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -91,7 +91,17 @@ public class PDFOptionsPanel extends AbstractOptionsPanel<FaxOptions> {
         
         add(checkBoxPanel, "1,1,1,1,f,t");
         add(new JLabel(_("iText version used:")), "1,3,1,3,l,t");
-        add(new JLabel(Document.getVersion()), "1,4,1,4,l,t");
+        add(new JLabel(getITextVersion()), "1,4,1,4,l,t");
+    }
+
+    private String getITextVersion() {
+        try {
+            return Document.getVersion();
+        } catch (NoClassDefFoundError e) {
+            return "ERROR: iText not found";
+        } catch (Throwable e) {
+            return e.getClass().getName() + " initializing iText";
+        }
     }
     
     /* (non-Javadoc)
