@@ -26,6 +26,7 @@ import yajhfc.PaperSize;
 import yajhfc.Utils;
 import yajhfc.file.FileConverter;
 import yajhfc.file.FileFormat;
+import yajhfc.pdf.PDFOptions;
 
 import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;
@@ -33,12 +34,15 @@ import com.itextpdf.text.Image;
 import com.itextpdf.text.PageSize;
 import com.itextpdf.text.Rectangle;
 import com.itextpdf.text.pdf.PdfContentByte;
+import com.itextpdf.text.pdf.PdfTemplate;
 import com.itextpdf.text.pdf.PdfWriter;
 import com.itextpdf.text.pdf.RandomAccessFileOrArray;
 import com.itextpdf.text.pdf.codec.TiffImage;
 
 public class ITextTIFFFileConverter implements FileConverter {
     private static final Logger log = Logger.getLogger(ITextTIFFFileConverter.class.getName());
+    
+    protected final PDFOptions options;
     
     @Override
     public void convertToHylaFormat(File inFile, OutputStream destination,
@@ -61,8 +65,12 @@ public class ITextTIFFFileConverter implements FileConverter {
                 Image img = TiffImage.getTiffImage(ra, pg + 1);
                 if (img != null) {
                     log.fine("Writing page " + (pg + 1));
-                    if (Utils.getFaxOptions().usePaperSizeForTIFF2Any) {
-                        scaleImageToFit(document, img, pageSize);
+                    if (options.TIFFfitToPaperSize) {
+                        if (options.TIFFchopLongPage && checkCrop(document, cb, img, pageSize)) {
+                            continue;
+                        } else {
+                            scaleImageToFit(document, img, pageSize, !options.TIFFassumePortrait);
+                        }
                     } else {
                         img.setAbsolutePosition(0, 0);
                         img.scalePercent(7200f / img.getDpiX(), 7200f / img.getDpiY());
@@ -82,14 +90,7 @@ public class ITextTIFFFileConverter implements FileConverter {
         }
     }
 
-    /**
-     * Scales the given image to fit the given page size and positions it vertically on top and horizontally centered.
-     * Switches the document's page size between landscape and portrait to make the image as large as possible.
-     * @param document
-     * @param img
-     * @param pageSize
-     */
-    public static void scaleImageToFit(Document document, Image img, final Rectangle pageSize) {
+    private boolean checkCrop(Document document, PdfContentByte cb, Image img, final Rectangle pageSize) throws DocumentException {
         float dpiFactor;
         if (img.getDpiX() > 0 && img.getDpiY() > 0)
             dpiFactor = (float)img.getDpiX() / (float)img.getDpiY();
@@ -99,7 +100,56 @@ public class ITextTIFFFileConverter implements FileConverter {
         float imgWidth = img.getWidth();
         float imgHeight = img.getHeight() * dpiFactor;
         
-        if (imgWidth > imgHeight) {
+        if (imgHeight > imgWidth * options.TIFFchopThreshold) {
+            document.setPageSize(pageSize);
+            
+            float chunkHeight = (imgWidth * options.TIFFchopFactor);
+            float docWidth = document.right()-document.left();
+            float docHeight = document.top()-document.bottom();
+            float scaleFactor = Math.min(docWidth/imgWidth, docHeight/chunkHeight);
+
+            float tplWidth  = imgWidth * scaleFactor;
+            float tplHeight = chunkHeight * scaleFactor;
+            float scaledHeight = imgHeight * scaleFactor;
+            img.scaleAbsolute(tplWidth, scaledHeight);     
+            
+            int count = (int)Math.ceil(imgHeight / chunkHeight);
+            for (int i=1; i<=count; i++) {
+                document.newPage();
+                
+                PdfTemplate tpl = cb.createTemplate(tplWidth, tplHeight);
+                img.setAbsolutePosition(0, i * tplHeight - scaledHeight);
+                tpl.addImage(img);
+                
+                cb.addTemplate(tpl, 
+                        (document.left() + document.right() - tplWidth) * 0.5f, 
+                        document.top() - tplHeight);
+            }
+            return true;
+        } else {
+            return false;
+        }
+    }
+    
+    
+    /**
+     * Scales the given image to fit the given page size and positions it vertically on top and horizontally centered.
+     * If rotate==true switches the document's page size between landscape and portrait to make the image as large as possible.
+     * @param document
+     * @param img
+     * @param pageSize
+     */
+    public static void scaleImageToFit(Document document, Image img, final Rectangle pageSize, boolean rotate) {
+        float dpiFactor;
+        if (img.getDpiX() > 0 && img.getDpiY() > 0)
+            dpiFactor = (float)img.getDpiX() / (float)img.getDpiY();
+        else
+            dpiFactor = 1f;
+        
+        float imgWidth = img.getWidth();
+        float imgHeight = img.getHeight() * dpiFactor;
+        
+        if (rotate && imgWidth > imgHeight) {
             document.setPageSize(pageSize.rotate());
         } else {
             document.setPageSize(pageSize);
@@ -120,4 +170,8 @@ public class ITextTIFFFileConverter implements FileConverter {
         return true;
     }
 
+    public ITextTIFFFileConverter(PDFOptions options) {
+        super();
+        this.options = options;
+    }
 }

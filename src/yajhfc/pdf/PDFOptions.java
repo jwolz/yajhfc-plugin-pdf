@@ -17,6 +17,8 @@
  */
 package yajhfc.pdf;
 
+import java.util.Properties;
+
 import yajhfc.AbstractFaxOptions;
 
 /**
@@ -37,11 +39,27 @@ public class PDFOptions extends AbstractFaxOptions {
     public boolean useITextForPNG = true;
     public boolean useITextForJPEG = true;
 	
+    
+    public boolean TIFFfitToPaperSize = true;
+    public boolean TIFFassumePortrait = true;
+    public boolean TIFFchopLongPage = true;
+    public float TIFFchopThreshold = 2f;
+    public float TIFFchopFactor = 1.41f;
+    
 	/**
 	 * Call the super constructor with the prefix that should be prepended
 	 * to the options name.
 	 */
 	public PDFOptions() {
 		super("pdf");
+	}
+	
+	@Override
+	public void loadFromProperties(Properties p) {
+	    if (!p.containsKey("pdf-TIFFfitToPaperSize") 
+	            && p.containsKey("usePaperSizeForTIFF2Any")) {
+	        p.setProperty("pdf-TIFFfitToPaperSize", p.getProperty("usePaperSizeForTIFF2Any"));
+	    }
+	    super.loadFromProperties(p);
 	}
 }

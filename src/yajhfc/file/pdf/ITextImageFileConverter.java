@@ -59,7 +59,7 @@ public class ITextImageFileConverter implements FileConverter {
             writer.setStrictImageSequence(true);  
             document.open();  
             Image img = Image.getInstance(inFile.getPath());  
-            ITextTIFFFileConverter.scaleImageToFit(document, img, pageSize);
+            ITextTIFFFileConverter.scaleImageToFit(document, img, pageSize, true);
             document.newPage();
             document.add(img);  
             document.close();

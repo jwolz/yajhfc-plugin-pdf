@@ -24,13 +24,19 @@ import java.awt.Dimension;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.text.MessageFormat;
+import java.text.NumberFormat;
+import java.text.ParseException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JTextField;
 
 import yajhfc.FaxOptions;
 import yajhfc.file.FileConverters;
@@ -47,12 +53,18 @@ import com.itextpdf.text.Document;
  *
  */
 public class PDFOptionsPanel extends AbstractOptionsPanel<FaxOptions> {   
+    private static final Logger log = Logger.getLogger(PDFOptionsPanel.class.getName());
     
     public PDFOptionsPanel() {
 		super(false);
 	}
 
     JCheckBox checkUseForTIFF, checkUseForPNG, checkUseForJPEG, checkUseForGIF;
+    
+    JCheckBox checkFitToPage, checkAssumePortrait, checkChopLongPage;
+    JTextField textChopThreshold, textChopFactor;
+    
+    NumberFormat floatFormat = NumberFormat.getNumberInstance();
     
     @Override
     protected void createOptionsUI() {
@@ -68,9 +80,34 @@ public class PDFOptionsPanel extends AbstractOptionsPanel<FaxOptions> {
         checkUseForGIF = new JCheckBox(convFormat.format(new Object[] {"GIF"}));
         checkUseForJPEG = new JCheckBox(convFormat.format(new Object[] {"JPEG"}));
         
+        checkFitToPage = new JCheckBox(_("Fit TIFF to page size"));
+        checkFitToPage.setSelected(true);
+        final ItemListener itemListener = new ItemListener() {
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                boolean enable = checkFitToPage.isSelected();
+                boolean enableChop = enable && checkChopLongPage.isSelected();
+                
+                checkAssumePortrait.setEnabled(enable);
+                checkChopLongPage.setEnabled(enable);
+                textChopFactor.setEnabled(enableChop);
+                textChopThreshold.setEnabled(enableChop);
+            }
+        };
+        checkFitToPage.addItemListener(itemListener);
+        checkAssumePortrait = new JCheckBox(_("Always use portrait orientation"));
+        checkChopLongPage = new JCheckBox(_("Chop long TIFFs into several pages"));
+        checkChopLongPage.setSelected(true);
+        checkChopLongPage.addItemListener(itemListener);
+        
+        textChopFactor = new JTextField();
+        textChopFactor.setToolTipText(_("The TIFF will be chopped into chunks [width] * [this value] heigh"));
+        textChopThreshold = new JTextField();
+        textChopThreshold.setToolTipText(_("Chop TIFF into multiple pages if [height] > [width] * [this value]"));
+        
         double[][] dLay = {
-                {OptionsWin.border, TableLayout.PREFERRED, TableLayout.FILL, OptionsWin.border},
-                {OptionsWin.border, TableLayout.PREFERRED,OptionsWin.border, TableLayout.PREFERRED, TableLayout.PREFERRED, TableLayout.FILL, OptionsWin.border}
+                {OptionsWin.border, TableLayout.PREFERRED, OptionsWin.border, TableLayout.PREFERRED, TableLayout.FILL, OptionsWin.border},
+                {OptionsWin.border, TableLayout.PREFERRED, OptionsWin.border, TableLayout.PREFERRED, TableLayout.PREFERRED, TableLayout.FILL, OptionsWin.border}
         };
     	setLayout(new TableLayout(dLay));
     	
@@ -89,7 +126,30 @@ public class PDFOptionsPanel extends AbstractOptionsPanel<FaxOptions> {
         checkBoxPanel.add(Box.createRigidArea(spacer));
         checkBoxPanel.add(checkUseForTIFF);
         
+        JPanel tiffPanel = new JPanel();
+        tiffPanel.setLayout(new BoxLayout(tiffPanel, BoxLayout.Y_AXIS));
+        tiffPanel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createTitledBorder(_("TIFF→PDF options")),
+                BorderFactory.createEmptyBorder(OptionsWin.border, OptionsWin.border, OptionsWin.border, OptionsWin.border)));
+        
+        Dimension doubleSpace = new Dimension(OptionsWin.border*2, OptionsWin.border*2);
+        Dimension halfSpace = new Dimension(OptionsWin.border/2, OptionsWin.border/2);
+        tiffPanel.add(checkFitToPage);
+        tiffPanel.add(Box.createRigidArea(spacer));
+        tiffPanel.add(checkAssumePortrait);
+        tiffPanel.add(Box.createRigidArea(spacer));
+        tiffPanel.add(checkChopLongPage);
+        tiffPanel.add(Box.createRigidArea(doubleSpace));
+        tiffPanel.add(new JLabel(_("Long page threshold factor:")));
+        tiffPanel.add(Box.createRigidArea(halfSpace));
+        tiffPanel.add(textChopThreshold);
+        tiffPanel.add(Box.createRigidArea(doubleSpace));
+        tiffPanel.add(new JLabel(_("Height factor for chopped pages:")));
+        tiffPanel.add(Box.createRigidArea(halfSpace));
+        tiffPanel.add(textChopFactor);
+
         add(checkBoxPanel, "1,1,1,1,f,t");
+        add(tiffPanel, "3,1,3,1,f,t");
         add(new JLabel(_("iText version used:")), "1,3,1,3,l,t");
         add(new JLabel(getITextVersion()), "1,4,1,4,l,t");
     }
@@ -115,6 +175,13 @@ public class PDFOptionsPanel extends AbstractOptionsPanel<FaxOptions> {
         checkUseForJPEG.setSelected(pdfOpt.useITextForJPEG);
         checkUseForTIFF.setSelected(pdfOpt.useITextForTIFF);
         
+        checkAssumePortrait.setSelected(pdfOpt.TIFFassumePortrait);
+        checkChopLongPage.setSelected(pdfOpt.TIFFchopLongPage);
+        checkFitToPage.setSelected(pdfOpt.TIFFfitToPaperSize);
+        
+        textChopFactor.setText(floatFormat.format(pdfOpt.TIFFchopFactor));
+        textChopThreshold.setText(floatFormat.format(pdfOpt.TIFFchopThreshold));
+        
         PathAndViewPanel.requireTIFF2PDF = !pdfOpt.useITextForTIFF;
     }
 
@@ -129,7 +196,52 @@ public class PDFOptionsPanel extends AbstractOptionsPanel<FaxOptions> {
         pdfOpt.useITextForJPEG = checkUseForJPEG.isSelected();
         pdfOpt.useITextForTIFF = checkUseForTIFF.isSelected();
         
+        pdfOpt.TIFFassumePortrait = checkAssumePortrait.isSelected();
+        pdfOpt.TIFFchopLongPage = checkChopLongPage.isSelected();
+        pdfOpt.TIFFfitToPaperSize = checkFitToPage.isSelected();
+        
+        try {
+            pdfOpt.TIFFchopFactor = floatFormat.parse(textChopFactor.getText()).floatValue();
+        } catch (ParseException e) {
+            log.log(Level.WARNING, "Exception parsing chop factor", e);
+        }
+        try {
+            pdfOpt.TIFFchopThreshold = floatFormat.parse(textChopThreshold.getText()).floatValue();
+        } catch (ParseException e) {
+            log.log(Level.WARNING, "Exception parsing chop threshold", e);
+        }
+        
         FileConverters.invalidateFileConverters();
     }
 
+    @Override
+    public boolean validateSettings(OptionsWin optionsWin) {
+        try {
+            float chopThreshold = floatFormat.parse(textChopThreshold.getText()).floatValue();
+            if (chopThreshold <= 0f || chopThreshold > 1000f) {
+                JOptionPane.showMessageDialog(optionsWin, _("The long page threshold must be between 0 and 1000."), _("PDF support (iText)"), JOptionPane.ERROR_MESSAGE);
+                optionsWin.focusComponent(textChopThreshold);
+                return false;
+            }
+        } catch (ParseException e) {
+            JOptionPane.showMessageDialog(optionsWin, _("The long page threshold must be a number."), _("PDF support (iText)"), JOptionPane.ERROR_MESSAGE);
+            optionsWin.focusComponent(textChopThreshold);
+            return false;
+        }
+
+        try {
+            float chopFactor = floatFormat.parse(textChopFactor.getText()).floatValue();
+            if (chopFactor <= 0f || chopFactor > 1000f) {
+                JOptionPane.showMessageDialog(optionsWin, _("The height factor must be between 0 and 1000."), _("PDF support (iText)"), JOptionPane.ERROR_MESSAGE);
+                optionsWin.focusComponent(textChopFactor);
+                return false;
+            }
+        } catch (ParseException e) {
+            JOptionPane.showMessageDialog(optionsWin, _("The height factor must be a number."), _("PDF support (iText)"), JOptionPane.ERROR_MESSAGE);
+            optionsWin.focusComponent(textChopFactor);
+            return false;
+        }
+        
+        return true;
+    }
 }

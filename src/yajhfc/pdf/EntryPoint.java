@@ -82,7 +82,7 @@ public class EntryPoint {
 	            
 	            PDFOptions options = getOptions();
 	            if (options.useITextForTIFF)
-	                converters.put(FileFormat.TIFF, new ITextTIFFFileConverter());
+	                converters.put(FileFormat.TIFF, new ITextTIFFFileConverter(options));
 	            
 	            ITextImageFileConverter ifc = new ITextImageFileConverter();
 	            if (options.useITextForPNG)
