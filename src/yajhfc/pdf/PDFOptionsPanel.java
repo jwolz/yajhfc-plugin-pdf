@@ -43,6 +43,7 @@ import yajhfc.file.FileConverters;
 import yajhfc.options.AbstractOptionsPanel;
 import yajhfc.options.OptionsWin;
 import yajhfc.options.PathAndViewPanel;
+import yajhfc.util.ClipboardPopup;
 
 import com.itextpdf.text.Document;
 
@@ -102,8 +103,10 @@ public class PDFOptionsPanel extends AbstractOptionsPanel<FaxOptions> {
         
         textChopFactor = new JTextField();
         textChopFactor.setToolTipText(_("The TIFF will be chopped into chunks [width] * [this value] heigh"));
+        ClipboardPopup.DEFAULT_POPUP.addToComponent(textChopFactor);
         textChopThreshold = new JTextField();
         textChopThreshold.setToolTipText(_("Chop TIFF into multiple pages if [height] > [width] * [this value]"));
+        ClipboardPopup.DEFAULT_POPUP.addToComponent(textChopThreshold);
         
         double[][] dLay = {
                 {OptionsWin.border, TableLayout.PREFERRED, OptionsWin.border, TableLayout.PREFERRED, TableLayout.FILL, OptionsWin.border},
