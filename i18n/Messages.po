@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-12-25 12:50+0100\n"
+"POT-Creation-Date: 2012-01-03 09:43+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,18 +18,70 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/EntryPoint.java:115
+#: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:225
+#: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:230
+#: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:238
+#: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:243
 msgid "PDF support (iText)"
 msgstr ""
 
-#: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:59
+#: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:72
 #, java-format
 msgid "Use iText to convert {0}→PDF"
 msgstr ""
 
-#: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:80
+#: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:84
+msgid "Fit TIFF to page size"
+msgstr ""
+
+#: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:99
+msgid "Always use portrait orientation"
+msgstr ""
+
+#: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:100
+msgid "Chop long TIFFs into several pages"
+msgstr ""
+
+#: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:105
+msgid "The TIFF will be chopped into chunks [width] * [this value] heigh"
+msgstr ""
+
+#: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:108
+msgid "Chop TIFF into multiple pages if [height] > [width] * [this value]"
+msgstr ""
+
+#: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:120
 msgid "File converters"
 msgstr ""
 
-#: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:93
+#: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:135
+msgid "TIFF→PDF options"
+msgstr ""
+
+#: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:146
+msgid "Long page threshold factor:"
+msgstr ""
+
+#: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:150
+msgid "Height factor for chopped pages:"
+msgstr ""
+
+#: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:156
 msgid "iText version used:"
+msgstr ""
+
+#: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:225
+msgid "The long page threshold must be between 0 and 1000."
+msgstr ""
+
+#: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:230
+msgid "The long page threshold must be a number."
+msgstr ""
+
+#: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:238
+msgid "The height factor must be between 0 and 1000."
+msgstr ""
+
+#: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:243
+msgid "The height factor must be a number."
 msgstr ""
