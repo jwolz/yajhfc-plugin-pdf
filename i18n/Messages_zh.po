@@ -10,7 +10,7 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-06-04 19:15+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Last-Translator: Joe Cheng <jrs428@yahoo.com.tw>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: \n"
 "MIME-Version: 1.0\n"
@@ -23,65 +23,65 @@ msgstr ""
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:238
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:243
 msgid "PDF support (iText)"
-msgstr ""
+msgstr "支援PDF(iText)"
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:72
 #, java-format
 msgid "Use iText to convert {0}→PDF"
-msgstr ""
+msgstr "使用iText轉換 {0}→PDF"
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:84
 msgid "Fit TIFF to page size"
-msgstr ""
+msgstr "TIFF符合頁面尺寸"
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:99
 msgid "Always use portrait orientation"
-msgstr ""
+msgstr "總是用縱向"
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:100
 msgid "Chop long TIFFs into several pages"
-msgstr ""
+msgstr "切成好幾頁長的TIFF"
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:105
 msgid "The TIFF will be chopped into chunks [width] * [this value] heigh"
-msgstr ""
+msgstr "在TIFF將切成區塊 [寬]* [值]高"
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:108
 msgid "Chop TIFF into multiple pages if [height] > [width] * [this value]"
-msgstr ""
+msgstr "切成多個頁面的TIFF [高]>[寬] *[此值]"
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:120
 msgid "File converters"
-msgstr ""
+msgstr "文件轉換器"
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:135
 msgid "TIFF→PDF options"
-msgstr ""
+msgstr "TIFF→PDF"
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:146
 msgid "Long page threshold factor:"
-msgstr ""
+msgstr "長頁面切割條件:"
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:150
 msgid "Height factor for chopped pages:"
-msgstr ""
+msgstr "切割頁面的高度條件:"
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:156
 msgid "iText version used:"
-msgstr ""
+msgstr "使用iText版本"
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:225
 msgid "The long page threshold must be between 0 and 1000."
-msgstr ""
+msgstr "長頁面條件值必須是0到1000之間"
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:230
 msgid "The long page threshold must be a number."
-msgstr ""
+msgstr "長頁面條件值必須是數值"
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:238
 msgid "The height factor must be between 0 and 1000."
-msgstr ""
+msgstr "高度的條件必須是介於0和1000。"
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:243
 msgid "The height factor must be a number."
-msgstr ""
+msgstr "高度的條件值必須是數值"
