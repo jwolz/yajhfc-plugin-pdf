@@ -3,14 +3,13 @@
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-06-04 19:15+0200\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"PO-Revision-Date: 2012-06-07 18:31+0400\n"
+"Last-Translator: Alexander Moisseev <moiseev@mezonplus.ru>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: \n"
 "MIME-Version: 1.0\n"
@@ -23,65 +22,66 @@ msgstr ""
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:238
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:243
 msgid "PDF support (iText)"
-msgstr ""
+msgstr "Поддержка PDF (iText)"
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:72
 #, java-format
 msgid "Use iText to convert {0}→PDF"
-msgstr ""
+msgstr "Использовать iText для преобразования {0}→PDF"
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:84
 msgid "Fit TIFF to page size"
-msgstr ""
+msgstr "Подгонять TIFF под размер страницы"
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:99
 msgid "Always use portrait orientation"
-msgstr ""
+msgstr "Всегда использовать портретную ориентацию"
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:100
 msgid "Chop long TIFFs into several pages"
-msgstr ""
+msgstr "Разбивать длинные TIFFы на несколько страниц"
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:105
 msgid "The TIFF will be chopped into chunks [width] * [this value] heigh"
-msgstr ""
+msgstr "TIFF будет разбит на страницы с высотой [ширина] * [это значение]"
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:108
 msgid "Chop TIFF into multiple pages if [height] > [width] * [this value]"
-msgstr ""
+msgstr "Разбивать TIFF на несколько страниц если [высота] > [ширина] * [это значение]"
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:120
 msgid "File converters"
-msgstr ""
+msgstr "Конвертеры файлов"
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:135
 msgid "TIFF→PDF options"
-msgstr ""
+msgstr "Настройки TIFF→PDF"
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:146
 msgid "Long page threshold factor:"
-msgstr ""
+msgstr "Пороговый коэффициент длинной страницы:"
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:150
 msgid "Height factor for chopped pages:"
-msgstr ""
+msgstr "Коэффициент выстоы для разбитых станиц:"
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:156
 msgid "iText version used:"
-msgstr ""
+msgstr "Используемая версия iText:"
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:225
 msgid "The long page threshold must be between 0 and 1000."
-msgstr ""
+msgstr "Порог длинной страницы должен быть между 0 и 1000."
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:230
 msgid "The long page threshold must be a number."
-msgstr ""
+msgstr "Порог длинной страницы должен быть числом."
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:238
 msgid "The height factor must be between 0 and 1000."
-msgstr ""
+msgstr "Коэфффициент выстоы должен быть между 0 и 1000."
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:243
 msgid "The height factor must be a number."
-msgstr ""
+msgstr "Коэффициент высоты должен быть числом."
+
