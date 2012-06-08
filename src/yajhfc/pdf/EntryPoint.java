@@ -18,14 +18,19 @@
 package yajhfc.pdf;
 
 
+import java.awt.event.ActionEvent;
+import java.io.File;
 import java.net.URL;
 import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.swing.Action;
 import javax.swing.ImageIcon;
+import javax.swing.JMenuItem;
 
+import yajhfc.MainWin;
 import yajhfc.Utils;
 import yajhfc.faxcover.Faxcover;
 import yajhfc.faxcover.pdf.PDFFaxcover;
@@ -33,15 +38,22 @@ import yajhfc.file.FileConverter;
 import yajhfc.file.FileConverterSource;
 import yajhfc.file.FileConverters;
 import yajhfc.file.FileFormat;
+import yajhfc.file.FormattedFile;
 import yajhfc.file.pdf.ITextImageFileConverter;
 import yajhfc.file.pdf.ITextTIFFFileConverter;
 import yajhfc.file.textextract.HylaToTextConverter;
 import yajhfc.file.textextract.pdf.ITextPDFToTextConverter;
 import yajhfc.launch.Launcher2;
+import yajhfc.model.FmtItem;
+import yajhfc.model.servconn.FaxJob;
+import yajhfc.model.ui.TooltipJTable;
 import yajhfc.options.PanelTreeNode;
 import yajhfc.pdf.i18n.Msgs;
+import yajhfc.pdf.report.SendReport;
 import yajhfc.plugin.PluginManager;
 import yajhfc.plugin.PluginUI;
+import yajhfc.util.ExcDialogAbstractAction;
+import yajhfc.util.ExceptionDialog;
 
 import com.itextpdf.text.Document;
 
@@ -96,10 +108,41 @@ public class EntryPoint {
 	    
 	    HylaToTextConverter.availableConverters.add(new ITextPDFToTextConverter());
 
+	    final Action actShowReport = new ExcDialogAbstractAction() {
+            
+            @Override
+            protected void actualActionPerformed(ActionEvent e) {
+                try {
+                    MainWin mw = (MainWin)Launcher2.application;
+                    TooltipJTable<? extends FmtItem> table = mw.getSelectedTable();
+                    SendReport rpt = new SendReport<FmtItem>();
+                    rpt.setThumbnailsPerPage(4);
+                    rpt.getColumns().addAll(table.getRealModel().getColumns());
+                    for (FaxJob job : table.getSelectedJobs()) {
+                        File outFile = new File("/tmp/test.pdf");
+                        rpt.createReport(job, outFile);
+                        
+                        FormattedFile ff = new FormattedFile(outFile);
+                        ff.view();
+                    }
+                } catch (Exception e2) {
+                    ExceptionDialog.showExceptionDialog(Launcher2.application.getFrame(), Msgs._("Error generationg report:"), e2);
+                }
+            }
+        };
+        actShowReport.putValue(Action.NAME, Msgs._("Generate send report") + "...");
+        actShowReport.putValue(Action.SHORT_DESCRIPTION, Msgs._("Generates a send report for the fax"));
+        
+	    
 	    PluginManager.pluginUIs.add(new PluginUI() {
 	        @Override
 	        public int getOptionsPanelParent() {
 	            return OPTION_PANEL_PATHS_VIEWERS;
+	        }
+	        
+	        @Override
+	        public JMenuItem[] createMenuItems() {
+	            return new JMenuItem[] { new JMenuItem(actShowReport) };
 	        }
 	        
 	        @Override
