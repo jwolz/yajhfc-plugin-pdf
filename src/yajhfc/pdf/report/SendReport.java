@@ -18,6 +18,7 @@
 package yajhfc.pdf.report;
 
 import static yajhfc.pdf.i18n.Msgs._;
+import gnu.inet.ftp.ServerResponseException;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -29,17 +30,21 @@ import java.util.Date;
 import java.util.List;
 
 import yajhfc.Utils;
+import yajhfc.file.FileConverter.ConversionException;
 import yajhfc.file.FormattedFile;
 import yajhfc.file.MultiFileConvFormat;
 import yajhfc.file.MultiFileConverter;
+import yajhfc.file.UnknownFormatException;
 import yajhfc.model.FmtItem;
 import yajhfc.model.servconn.FaxDocument;
 import yajhfc.model.servconn.FaxJob;
+import yajhfc.util.ProgressWorker;
 
 import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.PageSize;
 import com.itextpdf.text.Rectangle;
+import com.itextpdf.text.Utilities;
 import com.itextpdf.text.pdf.BaseFont;
 import com.itextpdf.text.pdf.PdfContentByte;
 import com.itextpdf.text.pdf.PdfImportedPage;
@@ -51,18 +56,27 @@ import com.itextpdf.text.pdf.PdfWriter;
  *
  */
 public class SendReport<T extends FmtItem> {
-        
-    protected float marginTop    = 10;
-    protected float marginLeft   = 10;
-    protected float marginRight  = 10;
-    protected float marginBottom = 10;
-    
-    protected float headerFontSize = 18;
-    protected float normalFontSize = 10;
-    
-    protected final List<T> columns = new ArrayList<T>();
     
     protected yajhfc.PaperSize paperSize = yajhfc.PaperSize.A4;
+    
+    /**
+     * Top margin in PostScript points
+     */
+    protected float marginTop    = 20;
+    /**
+     * Top margin in PostScript points
+     */
+    protected float marginLeft   = 20;
+    /**
+     * Top margin in PostScript points
+     */
+    protected float marginRight  = 20;
+    /**
+     * Top margin in PostScript points
+     */
+    protected float marginBottom = 20;
+    
+    protected final List<T> columns = new ArrayList<T>();
     
     protected int startPage = 1;
     /**
@@ -73,6 +87,21 @@ public class SendReport<T extends FmtItem> {
      * Number of thumbnails per page. 0 means unlimited (all on one page)
      */
     protected int thumbnailsPerPage = 0;
+    
+    protected BaseFont headerFont;
+    protected float headerFontSize = 18;
+    
+    protected BaseFont normalFont;
+    protected float normalFontSize = 10;
+    
+    protected String headLine = _("Fax send report");
+    
+    protected ProgressWorker statusWorker = null;
+    
+    public SendReport() throws DocumentException, IOException {
+        headerFont = BaseFont.createFont(BaseFont.HELVETICA_BOLD, BaseFont.WINANSI, BaseFont.NOT_EMBEDDED);
+        normalFont = BaseFont.createFont(BaseFont.HELVETICA, BaseFont.WINANSI, BaseFont.NOT_EMBEDDED);
+    }
     
     /**
      * Print a header
@@ -86,16 +115,14 @@ public class SendReport<T extends FmtItem> {
      * @throws IOException 
      * @throws DocumentException 
      */
-    private float printHeader(PdfContentByte cb, float x, float y, float width, int nPage, int numPages) throws DocumentException, IOException {
-        BaseFont bf = BaseFont.createFont(BaseFont.HELVETICA_BOLD, BaseFont.WINANSI, BaseFont.NOT_EMBEDDED);
+    protected float printHeader(PdfContentByte cb, float x, float y, float width, int nPage, int numPages) throws DocumentException, IOException {
         cb.beginText();
-        cb.setFontAndSize(bf, headerFontSize);
+        cb.setFontAndSize(headerFont, headerFontSize);
         
         cb.setTextMatrix(x, y-headerFontSize);
-        cb.showText(_("Fax send report"));
+        cb.showText(headLine);
         
-        bf = BaseFont.createFont(BaseFont.HELVETICA, BaseFont.WINANSI, BaseFont.NOT_EMBEDDED);
-        cb.setFontAndSize(bf, normalFontSize);
+        cb.setFontAndSize(normalFont, normalFontSize);
         String pageText = MessageFormat.format(_("Page {0} of {1}"), nPage, numPages);
         float textWidth = cb.getEffectiveStringWidth(pageText, false);
         cb.setTextMatrix(x+width-textWidth, y-headerFontSize);
@@ -106,7 +133,7 @@ public class SendReport<T extends FmtItem> {
         return y - headerFontSize*1.5f;
     }
     
-    private float printRows(PdfContentByte cb, float x, float y, float width, Row[] rows) throws DocumentException, IOException {
+    protected float printRows(PdfContentByte cb, float x, float y, float width, Row[] rows) throws DocumentException, IOException {
         y -= 2;
         cb.setLineWidth(0f);
         cb.moveTo(x, y);
@@ -115,8 +142,7 @@ public class SendReport<T extends FmtItem> {
         y -= 2;
         
         cb.beginText();
-        BaseFont bf = BaseFont.createFont(BaseFont.HELVETICA, BaseFont.WINANSI, BaseFont.NOT_EMBEDDED);
-        cb.setFontAndSize(bf, normalFontSize);
+        cb.setFontAndSize(normalFont, normalFontSize);
         
         float maxWidth = 0;
         for (Row row : rows) {
@@ -156,7 +182,7 @@ public class SendReport<T extends FmtItem> {
      * @return The last page processed
      * @throws IOException
      */
-    private int printNup(PdfContentByte cb, PdfWriter writer, PdfReader reader, float x, float y, float width, float height, int beginPage, int maxPages) throws IOException {
+    protected int printNUp(PdfContentByte cb, PdfWriter writer, PdfReader reader, float x, float y, float width, float height, int beginPage, int maxPages) throws IOException {
         
         Rectangle pgSize = reader.getPageSize(1);
         int numPages = reader.getNumberOfPages() - beginPage + 1;
@@ -216,7 +242,10 @@ public class SendReport<T extends FmtItem> {
         return iPage;
     }
     
-    public void createReport(FaxJob<T> job, File pdfFile) throws Exception {
+    public void createReport(FaxJob<T> job, File pdfFile) throws IOException, ServerResponseException, UnknownFormatException, ConversionException, DocumentException {
+        if (statusWorker != null) {
+            statusWorker.updateNote(_("Calculating job information..."));
+        }
         // Calculate rows for status table
         Row[] rows = new Row[columns.size()];
         for (int i=0; i<rows.length; i++) {
@@ -236,22 +265,35 @@ public class SendReport<T extends FmtItem> {
             
             rows[i] = new Row(desc, sVal);
         }
-        // Get input PDF
+        
+        // Create input PDF
+        if (statusWorker != null) {
+            statusWorker.updateNote(_("Retrieving list of documents..."));
+        }
         Collection<FaxDocument> docs = job.getDocuments();
+        if (statusWorker != null) {
+            statusWorker.updateNote(_("Downloading documents..."));
+        }
         List<FormattedFile> files = new ArrayList<FormattedFile>(docs.size());
         for (FaxDocument doc : docs) {
             files.add(doc.getDocument());
         }
-        File tempPDF = File.createTempFile("sendreport", ".pdf");
+        if (statusWorker != null) {
+            statusWorker.updateNote(_("Converting documents to PDF..."));
+        }
+        File tempPDF = File.createTempFile("report", ".pdf");
         tempPDF.deleteOnExit();
         MultiFileConverter.convertMultipleFilesToSingleFile(files, tempPDF, MultiFileConvFormat.PDF, paperSize);
         
+        if (statusWorker != null) {
+            statusWorker.updateNote(_("Creating PDF..."));
+        }
         // Create the output PDF
         Document document = new Document(PageSize.getRectangle(paperSize.name()), marginLeft, marginRight, marginTop, marginBottom);
         FileOutputStream outStream = new FileOutputStream(pdfFile);
         PdfWriter writer = PdfWriter.getInstance(document, outStream);
         document.addCreator(Utils.AppShortName + " " + Utils.AppVersion);
-        document.addSubject("Fax send report for fax job " + job.getIDValue());
+        document.addSubject(headLine + " (fax job " + job.getIDValue() + ")");
         document.open();
         PdfContentByte cb = writer.getDirectContent();
         PdfReader reader = new PdfReader(tempPDF.getPath());
@@ -268,22 +310,28 @@ public class SendReport<T extends FmtItem> {
         }
         int outPage = 1;
         while (firstPage <= lastPage) {
+            if (statusWorker != null) {
+                statusWorker.updateNote(MessageFormat.format(_("Writing PDF page {0}..."), outPage));
+            }
             document.newPage();
 
-            float x = marginLeft;
+            float x = document.left();
             float y = document.top();
-            float width  = document.right() - document.left();
+            float width  = document.right() - document.left(); 
 
             y = printHeader(cb, x, y, width, outPage, totalOutPages);
             y = printRows(cb, x, y, width, rows);
 
-            float height = y - document.bottom();
-
-            firstPage = printNup(cb, writer, reader, x, y, width, height, firstPage, Math.min(thumbnailsPerPage, lastPage-firstPage+1)) + 1;
+            float height = y - document.bottom(); 
+            
+            firstPage = printNUp(cb, writer, reader, x, y, width, height, firstPage, Math.min(thumbnailsPerPage, lastPage-firstPage+1)) + 1;
             outPage++;
         }
         
-        // step 5
+        // Close document
+        if (statusWorker != null) {
+            statusWorker.updateNote(_("Finishing..."));
+        }
         reader.close();
         document.close();
         
@@ -292,22 +340,6 @@ public class SendReport<T extends FmtItem> {
         tempPDF.delete();
     }
     
-    
-    public float getMarginTop() {
-        return marginTop;
-    }
-
-    public float getMarginLeft() {
-        return marginLeft;
-    }
-
-    public float getMarginRight() {
-        return marginRight;
-    }
-
-    public float getMarginBottom() {
-        return marginBottom;
-    }
 
     public float getHeaderFontSize() {
         return headerFontSize;
@@ -337,6 +369,22 @@ public class SendReport<T extends FmtItem> {
         return thumbnailsPerPage;
     }
 
+    public float getMarginTop() {
+        return marginTop;
+    }
+
+    public float getMarginLeft() {
+        return marginLeft;
+    }
+
+    public float getMarginRight() {
+        return marginRight;
+    }
+
+    public float getMarginBottom() {
+        return marginBottom;
+    }
+    
     public void setMarginTop(float marginTop) {
         this.marginTop = marginTop;
     }
@@ -353,6 +401,38 @@ public class SendReport<T extends FmtItem> {
         this.marginBottom = marginBottom;
     }
 
+    public float getMarginTopMM() {
+        return Utilities.pointsToMillimeters(marginTop);
+    }
+
+    public float getMarginLeftMM() {
+        return Utilities.pointsToMillimeters(marginLeft);
+    }
+
+    public float getMarginRightMM() {
+        return Utilities.pointsToMillimeters(marginRight);
+    }
+
+    public float getMarginBottomMM() {
+        return Utilities.pointsToMillimeters(marginBottom);
+    }
+    
+    public void setMarginTopMM(float marginTop) {
+        this.marginTop = Utilities.millimetersToPoints(marginTop);
+    }
+
+    public void setMarginLeftMM(float marginLeft) {
+        this.marginLeft = Utilities.millimetersToPoints(marginLeft);
+    }
+
+    public void setMarginRightMM(float marginRight) {
+        this.marginRight = Utilities.millimetersToPoints(marginRight);
+    }
+
+    public void setMarginBottomMM(float marginBottom) {
+        this.marginBottom = Utilities.millimetersToPoints(marginBottom);
+    }
+    
     public void setHeaderFontSize(float headerFontSize) {
         this.headerFontSize = headerFontSize;
     }
@@ -366,15 +446,53 @@ public class SendReport<T extends FmtItem> {
     }
 
     public void setStartPage(int startPage) {
+        if (startPage < 1)
+            throw new IllegalArgumentException("startPage must be >= 1");
         this.startPage = startPage;
     }
 
     public void setEndPage(int endPage) {
+        if (endPage < 0)
+            throw new IllegalArgumentException("endPage must be >= 0");
         this.endPage = endPage;
     }
 
     public void setThumbnailsPerPage(int thumbnailsPerPage) {
+        if (thumbnailsPerPage < 0)
+            throw new IllegalArgumentException("thumbnailsPerPage must be >= 0");
         this.thumbnailsPerPage = thumbnailsPerPage;
+    }
+
+    public BaseFont getHeaderFont() {
+        return headerFont;
+    }
+
+    public BaseFont getNormalFont() {
+        return normalFont;
+    }
+
+    public void setHeaderFont(BaseFont headerFont) {
+        this.headerFont = headerFont;
+    }
+
+    public void setNormalFont(BaseFont normalFont) {
+        this.normalFont = normalFont;
+    }
+    
+    public ProgressWorker getStatusWorker() {
+        return statusWorker;
+    }
+    
+    public void setStatusWorker(ProgressWorker statusWorker) {
+        this.statusWorker = statusWorker;
+    }
+    
+    public String getHeadLine() {
+        return headLine;
+    }
+    
+    public void setHeadLine(String headLine) {
+        this.headLine = headLine;
     }
 
     static class Row {

@@ -49,11 +49,15 @@ import yajhfc.model.servconn.FaxJob;
 import yajhfc.model.ui.TooltipJTable;
 import yajhfc.options.PanelTreeNode;
 import yajhfc.pdf.i18n.Msgs;
+import yajhfc.pdf.report.PdfPrinter;
 import yajhfc.pdf.report.SendReport;
 import yajhfc.plugin.PluginManager;
 import yajhfc.plugin.PluginUI;
+import yajhfc.print.FaxTablePrinter;
+import yajhfc.print.tableprint.TablePrintable;
 import yajhfc.util.ExcDialogAbstractAction;
 import yajhfc.util.ExceptionDialog;
+import yajhfc.util.ProgressWorker;
 
 import com.itextpdf.text.Document;
 
@@ -115,25 +119,79 @@ public class EntryPoint {
                 try {
                     MainWin mw = (MainWin)Launcher2.application;
                     TooltipJTable<? extends FmtItem> table = mw.getSelectedTable();
-                    SendReport rpt = new SendReport<FmtItem>();
+                    final SendReport rpt = new SendReport<FmtItem>();
                     rpt.setThumbnailsPerPage(4);
                     rpt.getColumns().addAll(table.getRealModel().getColumns());
-                    for (FaxJob job : table.getSelectedJobs()) {
-                        File outFile = new File("/tmp/test.pdf");
-                        rpt.createReport(job, outFile);
-                        
-                        FormattedFile ff = new FormattedFile(outFile);
-                        ff.view();
-                    }
+                    final FaxJob[] selectedJobs = table.getSelectedJobs();
+                    
+                    
+                    ProgressWorker pw = new ProgressWorker() {
+                        @Override
+                        public void doWork() {
+                            try {
+                                rpt.setStatusWorker(this);
+                                for (FaxJob<? extends FmtItem> job : selectedJobs) {
+                                    File outFile = new File("/tmp/test.pdf");
+                                    rpt.createReport(job, outFile);
+                                    
+                                    FormattedFile ff = new FormattedFile(outFile);
+                                    ff.view();
+                                }
+                            } catch (Exception e2) {
+                                ExceptionDialog.showExceptionDialog(Launcher2.application.getFrame(), Msgs._("Error generating report:"), e2);
+                            }
+                        }
+                    };
+                    pw.setProgressMonitor(mw.getTablePanel());
+                    pw.startWork(mw, Msgs._("Generating report..."));
                 } catch (Exception e2) {
-                    ExceptionDialog.showExceptionDialog(Launcher2.application.getFrame(), Msgs._("Error generationg report:"), e2);
+                    ExceptionDialog.showExceptionDialog(Launcher2.application.getFrame(), Msgs._("Error generating report:"), e2);
                 }
             }
         };
-        actShowReport.putValue(Action.NAME, Msgs._("Generate send report") + "...");
-        actShowReport.putValue(Action.SHORT_DESCRIPTION, Msgs._("Generates a send report for the fax"));
+        actShowReport.putValue(Action.NAME, Msgs._("Generate report") + "...");
+        actShowReport.putValue(Action.SHORT_DESCRIPTION, Msgs._("Generates a send or receive report for the fax"));
         
-	    
+       final Action actPrintTableToPDF = new ExcDialogAbstractAction() {
+            
+            @Override
+            protected void actualActionPerformed(ActionEvent e) {
+                try {
+                    MainWin mw = (MainWin)Launcher2.application;
+                    TooltipJTable<? extends FmtItem> table = mw.getSelectedTable();
+                    final String caption = mw.getTabMain().getToolTipTextAt(mw.getTabMain().getSelectedIndex());
+                    
+                    final TablePrintable tp = FaxTablePrinter.getFaxTablePrintable(mw, table, caption);
+                    final File outFile = new File("/tmp/test.pdf");
+                    
+                    final PdfPrinter pp = new PdfPrinter();
+                    pp.setSubject(caption);
+                    
+                    ProgressWorker pw = new ProgressWorker() {
+                        @Override
+                        public void doWork() {
+                            try {
+                                pp.setStatusWorker(this);
+                                pp.printToPDF(tp, outFile);
+
+                                updateNote(Msgs._("Starting viewer..."));
+                                FormattedFile ff = new FormattedFile(outFile);
+                                ff.view();
+                            } catch (Exception e2) {
+                                ExceptionDialog.showExceptionDialog(Launcher2.application.getFrame(), Msgs._("Error printing to PDF:"), e2);
+                            }
+                        }
+                    };
+                    pw.setProgressMonitor(mw.getTablePanel());
+                    pw.startWork(mw, Msgs._("Printing to PDF..."));
+                } catch (Exception e2) {
+                    ExceptionDialog.showExceptionDialog(Launcher2.application.getFrame(), Msgs._("Error printing to PDF:"), e2);
+                }
+            }
+        };
+        actPrintTableToPDF.putValue(Action.NAME, Msgs._("Print as PDF") + "...");
+        actPrintTableToPDF.putValue(Action.SHORT_DESCRIPTION, Msgs._("Print the selected table as PDF"));
+        
 	    PluginManager.pluginUIs.add(new PluginUI() {
 	        @Override
 	        public int getOptionsPanelParent() {
@@ -142,7 +200,7 @@ public class EntryPoint {
 	        
 	        @Override
 	        public JMenuItem[] createMenuItems() {
-	            return new JMenuItem[] { new JMenuItem(actShowReport) };
+	            return new JMenuItem[] { new JMenuItem(actShowReport), new JMenuItem(actPrintTableToPDF) };
 	        }
 	        
 	        @Override
