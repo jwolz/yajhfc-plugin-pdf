@@ -17,9 +17,11 @@
  */
 package yajhfc.pdf;
 
+import java.awt.print.PageFormat;
 import java.util.Properties;
 
 import yajhfc.AbstractFaxOptions;
+import yajhfc.PaperSize;
 
 /**
  * Example class to save options in the YajHFC settings file if you need to.
@@ -48,6 +50,14 @@ public class PDFOptions extends AbstractFaxOptions {
     
     
     public String lastSaveLocation = "";
+    
+    public int marginTop = 20;
+    public int marginBottom = 20;
+    public int marginLeft = 20;
+    public int marginRight = 20;
+    
+    public PaperSize paperSize = PaperSize.A4;
+    public int orientation = PageFormat.PORTRAIT;
     
 	/**
 	 * Call the super constructor with the prefix that should be prepended

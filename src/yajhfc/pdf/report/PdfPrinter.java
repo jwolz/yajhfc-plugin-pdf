@@ -33,13 +33,9 @@ import java.text.MessageFormat;
 
 import yajhfc.Utils;
 import yajhfc.pdf.i18n.Msgs;
-import yajhfc.util.ProgressWorker;
 
 import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;
-import com.itextpdf.text.PageSize;
-import com.itextpdf.text.Rectangle;
-import com.itextpdf.text.Utilities;
 import com.itextpdf.text.pdf.PdfContentByte;
 import com.itextpdf.text.pdf.PdfWriter;
 
@@ -48,34 +44,8 @@ import com.itextpdf.text.pdf.PdfWriter;
  * @author jonas
  *
  */
-public class PdfPrinter {
-    protected yajhfc.PaperSize paperSize = yajhfc.PaperSize.A4;
-    
-    /**
-     * Margin top in points
-     */
-    protected float marginTop    = 20;
-    /**
-     * Margin left in points
-     */
-    protected float marginLeft   = 20;
-    /**
-     * Margin right in points
-     */
-    protected float marginRight  = 20;
-    /**
-     * Margin bottom in points
-     */
-    protected float marginBottom = 20;
-    
-    /**
-     * Orientation using the PageFormat constants
-     */
-    protected int orientation = PageFormat.PORTRAIT;
-    
+public class PdfPrinter extends PdfDocWriter {
     protected String subject = "Report";
-    
-    protected ProgressWorker statusWorker = null;
     
     public void printToPDF(Printable printable, File outputFile) throws DocumentException, IOException, PrinterException {
         FileOutputStream outStream = new FileOutputStream(outputFile);
@@ -112,8 +82,7 @@ public class PdfPrinter {
         pf.setPaper(getPaper());
         pf.setOrientation(orientation);
         
-        Rectangle ps = PageSize.getRectangle(paperSize.name());
-        Document document = new Document(ps, marginLeft, marginRight, marginTop, marginBottom);
+        Document document = createPdfDocument();
         PdfWriter writer = PdfWriter.getInstance(document, outStream);
         document.addCreator(Utils.AppShortName + " " + Utils.AppVersion);
         document.addSubject(subject);
@@ -126,7 +95,7 @@ public class PdfPrinter {
             if (statusWorker != null) {
                 statusWorker.updateNote(statusMsg.format(new Object[] { iPage+1 }));
             }
-            Graphics2D graphics = cb.createGraphics(ps.getWidth(), ps.getHeight());
+            Graphics2D graphics = cb.createGraphics(document.getPageSize().getWidth(), document.getPageSize().getHeight());
             response = printable.print(graphics, pf, iPage);
             graphics.dispose();
             if (response == Printable.PAGE_EXISTS) {
@@ -140,98 +109,6 @@ public class PdfPrinter {
         return iPage;
     }
 
-    
-    public float getMarginTop() {
-        return marginTop;
-    }
-
-    public float getMarginLeft() {
-        return marginLeft;
-    }
-
-    public float getMarginRight() {
-        return marginRight;
-    }
-
-    public float getMarginBottom() {
-        return marginBottom;
-    }
-    
-    public void setMarginTop(float marginTop) {
-        this.marginTop = marginTop;
-    }
-
-    public void setMarginLeft(float marginLeft) {
-        this.marginLeft = marginLeft;
-    }
-
-    public void setMarginRight(float marginRight) {
-        this.marginRight = marginRight;
-    }
-
-    public void setMarginBottom(float marginBottom) {
-        this.marginBottom = marginBottom;
-    }
-
-    public float getMarginTopMM() {
-        return Utilities.pointsToMillimeters(marginTop);
-    }
-
-    public float getMarginLeftMM() {
-        return Utilities.pointsToMillimeters(marginLeft);
-    }
-
-    public float getMarginRightMM() {
-        return Utilities.pointsToMillimeters(marginRight);
-    }
-
-    public float getMarginBottomMM() {
-        return Utilities.pointsToMillimeters(marginBottom);
-    }
-    
-    public void setMarginTopMM(float marginTop) {
-        this.marginTop = Utilities.millimetersToPoints(marginTop);
-    }
-
-    public void setMarginLeftMM(float marginLeft) {
-        this.marginLeft = Utilities.millimetersToPoints(marginLeft);
-    }
-
-    public void setMarginRightMM(float marginRight) {
-        this.marginRight = Utilities.millimetersToPoints(marginRight);
-    }
-
-    public void setMarginBottomMM(float marginBottom) {
-        this.marginBottom = Utilities.millimetersToPoints(marginBottom);
-    }
-    
-    public yajhfc.PaperSize getPaperSize() {
-        return paperSize;
-    }
-
-
-    public int getOrientation() {
-        return orientation;
-    }
-
-
-    public void setPaperSize(yajhfc.PaperSize paperSize) {
-        this.paperSize = paperSize;
-    }
-
-
-    public void setOrientation(int orientation) {
-        this.orientation = orientation;
-    }
-
-    
-    public void setStatusWorker(ProgressWorker statusWorker) {
-        this.statusWorker = statusWorker;
-    }
-    
-    public ProgressWorker getStatusWorker() {
-        return statusWorker;
-    }
     
     public void setSubject(String subject) {
         this.subject = subject;

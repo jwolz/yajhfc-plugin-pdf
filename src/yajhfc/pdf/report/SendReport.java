@@ -38,13 +38,10 @@ import yajhfc.file.UnknownFormatException;
 import yajhfc.model.FmtItem;
 import yajhfc.model.servconn.FaxDocument;
 import yajhfc.model.servconn.FaxJob;
-import yajhfc.util.ProgressWorker;
 
 import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;
-import com.itextpdf.text.PageSize;
 import com.itextpdf.text.Rectangle;
-import com.itextpdf.text.Utilities;
 import com.itextpdf.text.pdf.BaseFont;
 import com.itextpdf.text.pdf.PdfContentByte;
 import com.itextpdf.text.pdf.PdfImportedPage;
@@ -55,26 +52,7 @@ import com.itextpdf.text.pdf.PdfWriter;
  * @author jonas
  *
  */
-public class SendReport<T extends FmtItem> {
-    
-    protected yajhfc.PaperSize paperSize = yajhfc.PaperSize.A4;
-    
-    /**
-     * Top margin in PostScript points
-     */
-    protected float marginTop    = 20;
-    /**
-     * Top margin in PostScript points
-     */
-    protected float marginLeft   = 20;
-    /**
-     * Top margin in PostScript points
-     */
-    protected float marginRight  = 20;
-    /**
-     * Top margin in PostScript points
-     */
-    protected float marginBottom = 20;
+public class SendReport<T extends FmtItem> extends PdfDocWriter {    
     
     protected final List<T> columns = new ArrayList<T>();
     
@@ -96,7 +74,6 @@ public class SendReport<T extends FmtItem> {
     
     protected String headLine = _("Fax send report");
     
-    protected ProgressWorker statusWorker = null;
     
     public SendReport() throws DocumentException, IOException {
         headerFont = BaseFont.createFont(BaseFont.HELVETICA_BOLD, BaseFont.WINANSI, BaseFont.NOT_EMBEDDED);
@@ -289,7 +266,7 @@ public class SendReport<T extends FmtItem> {
             statusWorker.updateNote(_("Creating PDF..."));
         }
         // Create the output PDF
-        Document document = new Document(PageSize.getRectangle(paperSize.name()), marginLeft, marginRight, marginTop, marginBottom);
+        Document document = createPdfDocument();
         FileOutputStream outStream = new FileOutputStream(pdfFile);
         PdfWriter writer = PdfWriter.getInstance(document, outStream);
         document.addCreator(Utils.AppShortName + " " + Utils.AppVersion);
@@ -339,7 +316,6 @@ public class SendReport<T extends FmtItem> {
         
         tempPDF.delete();
     }
-    
 
     public float getHeaderFontSize() {
         return headerFontSize;
@@ -351,10 +327,6 @@ public class SendReport<T extends FmtItem> {
 
     public List<T> getColumns() {
         return columns;
-    }
-
-    public yajhfc.PaperSize getPaperSize() {
-        return paperSize;
     }
 
     public int getStartPage() {
@@ -369,69 +341,6 @@ public class SendReport<T extends FmtItem> {
         return thumbnailsPerPage;
     }
 
-    public float getMarginTop() {
-        return marginTop;
-    }
-
-    public float getMarginLeft() {
-        return marginLeft;
-    }
-
-    public float getMarginRight() {
-        return marginRight;
-    }
-
-    public float getMarginBottom() {
-        return marginBottom;
-    }
-    
-    public void setMarginTop(float marginTop) {
-        this.marginTop = marginTop;
-    }
-
-    public void setMarginLeft(float marginLeft) {
-        this.marginLeft = marginLeft;
-    }
-
-    public void setMarginRight(float marginRight) {
-        this.marginRight = marginRight;
-    }
-
-    public void setMarginBottom(float marginBottom) {
-        this.marginBottom = marginBottom;
-    }
-
-    public float getMarginTopMM() {
-        return Utilities.pointsToMillimeters(marginTop);
-    }
-
-    public float getMarginLeftMM() {
-        return Utilities.pointsToMillimeters(marginLeft);
-    }
-
-    public float getMarginRightMM() {
-        return Utilities.pointsToMillimeters(marginRight);
-    }
-
-    public float getMarginBottomMM() {
-        return Utilities.pointsToMillimeters(marginBottom);
-    }
-    
-    public void setMarginTopMM(float marginTop) {
-        this.marginTop = Utilities.millimetersToPoints(marginTop);
-    }
-
-    public void setMarginLeftMM(float marginLeft) {
-        this.marginLeft = Utilities.millimetersToPoints(marginLeft);
-    }
-
-    public void setMarginRightMM(float marginRight) {
-        this.marginRight = Utilities.millimetersToPoints(marginRight);
-    }
-
-    public void setMarginBottomMM(float marginBottom) {
-        this.marginBottom = Utilities.millimetersToPoints(marginBottom);
-    }
     
     public void setHeaderFontSize(float headerFontSize) {
         this.headerFontSize = headerFontSize;
@@ -441,9 +350,6 @@ public class SendReport<T extends FmtItem> {
         this.normalFontSize = normalFontSize;
     }
 
-    public void setPaperSize(yajhfc.PaperSize paperSize) {
-        this.paperSize = paperSize;
-    }
 
     public void setStartPage(int startPage) {
         if (startPage < 1)
@@ -477,14 +383,6 @@ public class SendReport<T extends FmtItem> {
 
     public void setNormalFont(BaseFont normalFont) {
         this.normalFont = normalFont;
-    }
-    
-    public ProgressWorker getStatusWorker() {
-        return statusWorker;
-    }
-    
-    public void setStatusWorker(ProgressWorker statusWorker) {
-        this.statusWorker = statusWorker;
     }
     
     public String getHeadLine() {

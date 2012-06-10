@@ -18,6 +18,7 @@
 package yajhfc.pdf;
 
 
+import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.io.File;
 import java.net.URL;
@@ -28,7 +29,9 @@ import java.util.logging.Logger;
 
 import javax.swing.Action;
 import javax.swing.ImageIcon;
+import javax.swing.JMenu;
 import javax.swing.JMenuItem;
+import javax.swing.SwingUtilities;
 
 import yajhfc.MainWin;
 import yajhfc.Utils;
@@ -51,9 +54,12 @@ import yajhfc.options.PanelTreeNode;
 import yajhfc.pdf.i18n.Msgs;
 import yajhfc.pdf.report.PdfPrinter;
 import yajhfc.pdf.report.SendReport;
+import yajhfc.pdf.report.ui.PdfPrinterDialog;
+import yajhfc.phonebook.ui.NewPhoneBookWin;
 import yajhfc.plugin.PluginManager;
 import yajhfc.plugin.PluginUI;
 import yajhfc.print.FaxTablePrinter;
+import yajhfc.print.PhonebooksPrinter;
 import yajhfc.print.tableprint.TablePrintable;
 import yajhfc.util.ExcDialogAbstractAction;
 import yajhfc.util.ExceptionDialog;
@@ -71,7 +77,9 @@ import com.itextpdf.text.Document;
  */
 public class EntryPoint {
 
-	/**
+	private static final String PROP_PHONEBOOKWIN = "YajHFC-PhoneBookWin";
+	
+    /**
 	 * Plugin initialization method.
 	 * The name and signature of this method must be exactly as follows 
 	 * (i.e. it must always be "public static boolean init(int)" )
@@ -162,9 +170,13 @@ public class EntryPoint {
                     final String caption = mw.getTabMain().getToolTipTextAt(mw.getTabMain().getSelectedIndex());
                     
                     final TablePrintable tp = FaxTablePrinter.getFaxTablePrintable(mw, table, caption);
-                    final File outFile = new File("/tmp/test.pdf");
-                    
+                    if (tp == null) // User hit cancel
+                        return;
                     final PdfPrinter pp = new PdfPrinter();
+                    final File outFile = PdfPrinterDialog.showPdfPrinterDialog(mw, pp, Msgs._("Print to PDF"));
+                    if (outFile == null) // User hit cancel
+                        return;
+                    
                     pp.setSubject(caption);
                     
                     ProgressWorker pw = new ProgressWorker() {
@@ -189,8 +201,51 @@ public class EntryPoint {
                 }
             }
         };
-        actPrintTableToPDF.putValue(Action.NAME, Msgs._("Print as PDF") + "...");
-        actPrintTableToPDF.putValue(Action.SHORT_DESCRIPTION, Msgs._("Print the selected table as PDF"));
+        actPrintTableToPDF.putValue(Action.NAME, Msgs._("Print to PDF") + "...");
+        actPrintTableToPDF.putValue(Action.SHORT_DESCRIPTION, Msgs._("Print the selected table to PDF"));
+        
+       final Action actPrintPhonebookToPDF = new ExcDialogAbstractAction() {
+            
+            @Override
+            protected void actualActionPerformed(ActionEvent e) {
+                try {
+                    JMenuItem item = (JMenuItem)e.getSource();
+                    NewPhoneBookWin npbw = (NewPhoneBookWin)item.getClientProperty(PROP_PHONEBOOKWIN);
+                    
+                    final TablePrintable tp = PhonebooksPrinter.getPhonebooksTablePrintable(npbw, npbw.getTreeModel().getPhoneBooks(), npbw.getCurrentPhoneBook(), npbw.getRawSelectedEntries(), npbw.getTreeModel().isShowingFilteredResults());
+                    if (tp == null) // User hit cancel
+                        return;
+                    final PdfPrinter pp = new PdfPrinter();
+                    final File outFile = PdfPrinterDialog.showPdfPrinterDialog(npbw, pp, Msgs._("Print to PDF"));
+                    if (outFile == null) // User hit cancel
+                        return;
+                    
+                    pp.setSubject("Phone book");
+                    
+                    ProgressWorker pw = new ProgressWorker() {
+                        @Override
+                        public void doWork() {
+                            try {
+                                pp.setStatusWorker(this);
+                                pp.printToPDF(tp, outFile);
+
+                                updateNote(Msgs._("Starting viewer..."));
+                                FormattedFile ff = new FormattedFile(outFile);
+                                ff.view();
+                            } catch (Exception e2) {
+                                ExceptionDialog.showExceptionDialog(Launcher2.application.getFrame(), Msgs._("Error printing to PDF:"), e2);
+                            }
+                        }
+                    };
+                    pw.setProgressMonitor(npbw.getProgressPanel());
+                    pw.startWork(npbw, Msgs._("Printing to PDF..."));
+                } catch (Exception e2) {
+                    ExceptionDialog.showExceptionDialog(Launcher2.application.getFrame(), Msgs._("Error printing to PDF:"), e2);
+                }
+            }
+        };
+        actPrintPhonebookToPDF.putValue(Action.NAME, Msgs._("Print to PDF") + "...");
+        actPrintPhonebookToPDF.putValue(Action.SHORT_DESCRIPTION, Msgs._("Print the selected phone book to PDF"));
         
 	    PluginManager.pluginUIs.add(new PluginUI() {
 	        @Override
@@ -199,8 +254,16 @@ public class EntryPoint {
 	        }
 	        
 	        @Override
-	        public JMenuItem[] createMenuItems() {
-	            return new JMenuItem[] { new JMenuItem(actShowReport), new JMenuItem(actPrintTableToPDF) };
+	        public void configureMainWin(MainWin mainWin) {
+	            insertAfter(mainWin.getMenuFax(), "ViewLog",  new JMenuItem(actShowReport));
+	            mainWin.getMenuTable().add(new JMenuItem(actPrintTableToPDF));
+	        }
+	        
+	        @Override
+	        public void configurePhoneBookWin(NewPhoneBookWin phoneBookWin) {
+	            JMenuItem itemPrintToPDF = new JMenuItem(actPrintPhonebookToPDF);
+	            itemPrintToPDF.putClientProperty(PROP_PHONEBOOKWIN, phoneBookWin);
+	            insertAfter(phoneBookWin.getPhonebookMenu(), "Print", itemPrintToPDF);
 	        }
 	        
 	        @Override
@@ -249,6 +312,27 @@ public class EntryPoint {
 	    return options;
 	}
     
+	public static void insertAfter(JMenu menu, String actionCommandAfter, JMenuItem menuItem) {
+        int insertPos = indexOfAction(menu, actionCommandAfter);
+        if (insertPos < 0) {
+            insertPos = menu.getMenuComponentCount()-3;
+        }
+        menu.insert(menuItem, insertPos+1);
+	}
+	
+	public static int indexOfAction(JMenu menu, String actionCommand) {
+	    for (int i=0; i<menu.getMenuComponentCount(); i++) {
+	        Component comp = menu.getMenuComponent(i);
+	        if (comp instanceof JMenuItem) {
+	            JMenuItem item = (JMenuItem)comp;
+	            if (actionCommand.equals(item.getActionCommand())) {
+	                return i;
+	            }
+	        }
+	    }
+	    return -1;
+	}
+	
     /**
      * Launches YajHFC including this plugin (for debugging purposes)
      * @param args
