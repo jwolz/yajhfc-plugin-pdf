@@ -94,6 +94,9 @@ public class PdfPrinter extends PdfDocWriter {
         while (response == Printable.PAGE_EXISTS && (numberOfPages == 0 || iPage < numberOfPages)) {
             if (statusWorker != null) {
                 statusWorker.updateNote(statusMsg.format(new Object[] { iPage+1 }));
+                if (numberOfPages > 0) {
+                    statusWorker.setProgress(iPage * 100 / numberOfPages);
+                }
             }
             Graphics2D graphics = cb.createGraphics(document.getPageSize().getWidth(), document.getPageSize().getHeight());
             response = printable.print(graphics, pf, iPage);

@@ -18,10 +18,11 @@
 package yajhfc.pdf;
 
 
-import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.io.File;
 import java.net.URL;
+import java.text.MessageFormat;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Level;
@@ -29,9 +30,11 @@ import java.util.logging.Logger;
 
 import javax.swing.Action;
 import javax.swing.ImageIcon;
-import javax.swing.JMenu;
 import javax.swing.JMenuItem;
-import javax.swing.SwingUtilities;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 
 import yajhfc.MainWin;
 import yajhfc.Utils;
@@ -60,6 +63,7 @@ import yajhfc.plugin.PluginManager;
 import yajhfc.plugin.PluginUI;
 import yajhfc.print.FaxTablePrinter;
 import yajhfc.print.PhonebooksPrinter;
+import yajhfc.print.tableprint.Alignment;
 import yajhfc.print.tableprint.TablePrintable;
 import yajhfc.util.ExcDialogAbstractAction;
 import yajhfc.util.ExceptionDialog;
@@ -77,98 +81,132 @@ import com.itextpdf.text.Document;
  */
 public class EntryPoint {
 
-	private static final String PROP_PHONEBOOKWIN = "YajHFC-PhoneBookWin";
-	
+    static final class ShowReportAction extends ExcDialogAbstractAction implements ListSelectionListener, ChangeListener {
+        public ShowReportAction() {
+            this.putValue(Action.NAME, Msgs._("Generate report") + "...");
+            this.putValue(Action.SHORT_DESCRIPTION, Msgs._("Generates a send or receive report for the fax"));
+            this.putValue(Action.SMALL_ICON, loadIcon("showreport.gif"));
+            setEnabled(false);
+        }
+        
+        public void stateChanged(ChangeEvent e) {
+            doEnableCheck();
+        }
+        
+        public void valueChanged(ListSelectionEvent e) {
+            doEnableCheck();
+        }
+        
+        public void doEnableCheck() {            
+            MainWin mw = (MainWin)Launcher2.application;
+            TooltipJTable<? extends FmtItem> table = mw.getSelectedTable();
+            boolean enable;
+            
+            switch (table.getRealModel().getTableType()) {
+            case RECEIVED:
+            case SENT:
+                enable = (table.getSelectedRow() >= 0);
+                break;
+            case ARCHIVE:
+            case SENDING:
+            default:
+                enable = false;
+                break;
+            }
+            
+            setEnabled(enable);
+        }
+        
+        @Override
+        protected void actualActionPerformed(ActionEvent e) {
+            try {
+                MainWin mw = (MainWin)Launcher2.application;
+                TooltipJTable<? extends FmtItem> table = mw.getSelectedTable();
+                final SendReport rpt = new SendReport<FmtItem>();
+                rpt.setThumbnailsPerPage(4);
+                rpt.getColumns().addAll(table.getRealModel().getColumns());
+                final FaxJob[] selectedJobs = table.getSelectedJobs();
+
+
+                ProgressWorker pw = new ProgressWorker() {
+                    @Override
+                    public void doWork() {
+                        try {
+                            rpt.setStatusWorker(this);
+                            for (FaxJob<? extends FmtItem> job : selectedJobs) {
+                                File outFile = new File("/tmp/test.pdf");
+                                rpt.createReport(job, outFile);
+
+                                FormattedFile ff = new FormattedFile(outFile);
+                                ff.view();
+                            }
+                        } catch (Exception e2) {
+                            ExceptionDialog.showExceptionDialog(Launcher2.application.getFrame(), Msgs._("Error generating report:"), e2);
+                        }
+                    }
+                };
+                pw.setProgressMonitor(mw.getTablePanel());
+                pw.startWork(mw, Msgs._("Generating report..."));
+            } catch (Exception e2) {
+                ExceptionDialog.showExceptionDialog(Launcher2.application.getFrame(), Msgs._("Error generating report:"), e2);
+            }
+        }
+    }
+
+    private static final String PROP_PHONEBOOKWIN = "YajHFC-PhoneBookWin";
+
     /**
-	 * Plugin initialization method.
-	 * The name and signature of this method must be exactly as follows 
-	 * (i.e. it must always be "public static boolean init(int)" )
-	 * @param startupMode the mode YajHFC is starting up in. The possible
-	 *    values are one of the STARTUP_MODE_* constants defined in yajhfc.plugin.PluginManager
-	 * @return true if the initialization was successful, false otherwise.
-	 */
-	public static boolean init(int startupMode) {
-	    if (Utils.debugMode) {
-	        Logger.getLogger(EntryPoint.class.getName()).info("iText version: " + Document.getVersion());
-	    }
-	    
-	    Faxcover.supportedCoverFormats.put(FileFormat.PDF, PDFFaxcover.class);
-	    
-	    FileConverters.addFileConverterSource(new FileConverterSource() {
-	        @Override
-	        public void addFileConvertersTo(Map<FileFormat, FileConverter> converters) {	            
-	            try {
+     * Plugin initialization method.
+     * The name and signature of this method must be exactly as follows 
+     * (i.e. it must always be "public static boolean init(int)" )
+     * @param startupMode the mode YajHFC is starting up in. The possible
+     *    values are one of the STARTUP_MODE_* constants defined in yajhfc.plugin.PluginManager
+     * @return true if the initialization was successful, false otherwise.
+     */
+    public static boolean init(int startupMode) {
+        if (Utils.debugMode) {
+            Logger.getLogger(EntryPoint.class.getName()).info("iText version: " + Document.getVersion());
+        }
+
+        Faxcover.supportedCoverFormats.put(FileFormat.PDF, PDFFaxcover.class);
+
+        FileConverters.addFileConverterSource(new FileConverterSource() {
+            @Override
+            public void addFileConvertersTo(Map<FileFormat, FileConverter> converters) {	            
+                try {
                     Document.getVersion();
                 } catch (Throwable e) {
                     Logger.getLogger(EntryPoint.class.getName()).log(Level.SEVERE, "Could not initialize iText", e);
                     return;
                 }
-	            
-	            PDFOptions options = getOptions();
-	            if (options.useITextForTIFF)
-	                converters.put(FileFormat.TIFF, new ITextTIFFFileConverter(options));
-	            
-	            ITextImageFileConverter ifc = new ITextImageFileConverter();
-	            if (options.useITextForPNG)
-	                converters.put(FileFormat.PNG, ifc);
-	            if (options.useITextForJPEG)
-	                converters.put(FileFormat.JPEG, ifc);
-	            if (options.useITextForGIF)
-	                converters.put(FileFormat.GIF, ifc);
-	        }
-        });
-	    
-	    HylaToTextConverter.availableConverters.add(new ITextPDFToTextConverter());
 
-	    final Action actShowReport = new ExcDialogAbstractAction() {
-            
-            @Override
-            protected void actualActionPerformed(ActionEvent e) {
-                try {
-                    MainWin mw = (MainWin)Launcher2.application;
-                    TooltipJTable<? extends FmtItem> table = mw.getSelectedTable();
-                    final SendReport rpt = new SendReport<FmtItem>();
-                    rpt.setThumbnailsPerPage(4);
-                    rpt.getColumns().addAll(table.getRealModel().getColumns());
-                    final FaxJob[] selectedJobs = table.getSelectedJobs();
-                    
-                    
-                    ProgressWorker pw = new ProgressWorker() {
-                        @Override
-                        public void doWork() {
-                            try {
-                                rpt.setStatusWorker(this);
-                                for (FaxJob<? extends FmtItem> job : selectedJobs) {
-                                    File outFile = new File("/tmp/test.pdf");
-                                    rpt.createReport(job, outFile);
-                                    
-                                    FormattedFile ff = new FormattedFile(outFile);
-                                    ff.view();
-                                }
-                            } catch (Exception e2) {
-                                ExceptionDialog.showExceptionDialog(Launcher2.application.getFrame(), Msgs._("Error generating report:"), e2);
-                            }
-                        }
-                    };
-                    pw.setProgressMonitor(mw.getTablePanel());
-                    pw.startWork(mw, Msgs._("Generating report..."));
-                } catch (Exception e2) {
-                    ExceptionDialog.showExceptionDialog(Launcher2.application.getFrame(), Msgs._("Error generating report:"), e2);
-                }
+                PDFOptions options = getOptions();
+                if (options.useITextForTIFF)
+                    converters.put(FileFormat.TIFF, new ITextTIFFFileConverter(options));
+
+                ITextImageFileConverter ifc = new ITextImageFileConverter();
+                if (options.useITextForPNG)
+                    converters.put(FileFormat.PNG, ifc);
+                if (options.useITextForJPEG)
+                    converters.put(FileFormat.JPEG, ifc);
+                if (options.useITextForGIF)
+                    converters.put(FileFormat.GIF, ifc);
             }
-        };
-        actShowReport.putValue(Action.NAME, Msgs._("Generate report") + "...");
-        actShowReport.putValue(Action.SHORT_DESCRIPTION, Msgs._("Generates a send or receive report for the fax"));
-        
-       final Action actPrintTableToPDF = new ExcDialogAbstractAction() {
-            
+        });
+
+        HylaToTextConverter.availableConverters.add(new ITextPDFToTextConverter());
+
+        final ShowReportAction actShowReport = new ShowReportAction();
+
+        final Action actPrintTableToPDF = new ExcDialogAbstractAction() {
+
             @Override
             protected void actualActionPerformed(ActionEvent e) {
                 try {
                     MainWin mw = (MainWin)Launcher2.application;
                     TooltipJTable<? extends FmtItem> table = mw.getSelectedTable();
                     final String caption = mw.getTabMain().getToolTipTextAt(mw.getTabMain().getSelectedIndex());
-                    
+
                     final TablePrintable tp = FaxTablePrinter.getFaxTablePrintable(mw, table, caption);
                     if (tp == null) // User hit cancel
                         return;
@@ -176,9 +214,9 @@ public class EntryPoint {
                     final File outFile = PdfPrinterDialog.showPdfPrinterDialog(mw, pp, Msgs._("Print to PDF"));
                     if (outFile == null) // User hit cancel
                         return;
-                    
+
                     pp.setSubject(caption);
-                    
+
                     ProgressWorker pw = new ProgressWorker() {
                         @Override
                         public void doWork() {
@@ -203,15 +241,16 @@ public class EntryPoint {
         };
         actPrintTableToPDF.putValue(Action.NAME, Msgs._("Print to PDF") + "...");
         actPrintTableToPDF.putValue(Action.SHORT_DESCRIPTION, Msgs._("Print the selected table to PDF"));
-        
-       final Action actPrintPhonebookToPDF = new ExcDialogAbstractAction() {
-            
+        actPrintTableToPDF.putValue(Action.SMALL_ICON, loadIcon("printtopdf.png"));
+
+        final Action actPrintPhonebookToPDF = new ExcDialogAbstractAction() {
+
             @Override
             protected void actualActionPerformed(ActionEvent e) {
                 try {
                     JMenuItem item = (JMenuItem)e.getSource();
                     NewPhoneBookWin npbw = (NewPhoneBookWin)item.getClientProperty(PROP_PHONEBOOKWIN);
-                    
+
                     final TablePrintable tp = PhonebooksPrinter.getPhonebooksTablePrintable(npbw, npbw.getTreeModel().getPhoneBooks(), npbw.getCurrentPhoneBook(), npbw.getRawSelectedEntries(), npbw.getTreeModel().isShowingFilteredResults());
                     if (tp == null) // User hit cancel
                         return;
@@ -221,7 +260,7 @@ public class EntryPoint {
                         return;
                     
                     pp.setSubject("Phone book");
-                    
+
                     ProgressWorker pw = new ProgressWorker() {
                         @Override
                         public void doWork() {
@@ -246,28 +285,41 @@ public class EntryPoint {
         };
         actPrintPhonebookToPDF.putValue(Action.NAME, Msgs._("Print to PDF") + "...");
         actPrintPhonebookToPDF.putValue(Action.SHORT_DESCRIPTION, Msgs._("Print the selected phone book to PDF"));
-        
-	    PluginManager.pluginUIs.add(new PluginUI() {
-	        @Override
-	        public int getOptionsPanelParent() {
-	            return OPTION_PANEL_PATHS_VIEWERS;
-	        }
-	        
-	        @Override
-	        public void configureMainWin(MainWin mainWin) {
-	            insertAfter(mainWin.getMenuFax(), "ViewLog",  new JMenuItem(actShowReport));
-	            mainWin.getMenuTable().add(new JMenuItem(actPrintTableToPDF));
-	        }
-	        
-	        @Override
-	        public void configurePhoneBookWin(NewPhoneBookWin phoneBookWin) {
-	            JMenuItem itemPrintToPDF = new JMenuItem(actPrintPhonebookToPDF);
-	            itemPrintToPDF.putClientProperty(PROP_PHONEBOOKWIN, phoneBookWin);
-	            insertAfter(phoneBookWin.getPhonebookMenu(), "Print", itemPrintToPDF);
-	        }
-	        
-	        @Override
-	        public PanelTreeNode createOptionsPanel(PanelTreeNode parent) {
+        actPrintPhonebookToPDF.putValue(Action.SMALL_ICON, loadIcon("printtopdf.png"));
+
+        PluginManager.pluginUIs.add(new PluginUI() {
+            @Override
+            public int getOptionsPanelParent() {
+                return OPTION_PANEL_PATHS_VIEWERS;
+            }
+
+            @Override
+            public void configureMainWin(MainWin mainWin) {
+                insertMenuItemAfter(mainWin.getMenuFax(), "ViewLog", new JMenuItem(actShowReport));
+                insertMenuItemAfter(mainWin.getMenuTable(), "PrintTable", new JMenuItem(actPrintTableToPDF));
+                
+                mainWin.getTabMain().addChangeListener(actShowReport);
+                mainWin.getTableRecv().getSelectionModel().addListSelectionListener(actShowReport);
+                mainWin.getTableSent().getSelectionModel().addListSelectionListener(actShowReport);
+            }
+            
+            @Override
+            public Map<String, Action> createToolbarActions() {
+                Map<String,Action> actionMap = new HashMap<String,Action>();
+                actionMap.put("PrintTableToPDF", actPrintTableToPDF);
+                actionMap.put("ShowReport", actShowReport);
+                return actionMap;
+            }
+
+            @Override
+            public void configurePhoneBookWin(NewPhoneBookWin phoneBookWin) {
+                JMenuItem itemPrintToPDF = new JMenuItem(actPrintPhonebookToPDF);
+                itemPrintToPDF.putClientProperty(PROP_PHONEBOOKWIN, phoneBookWin);
+                insertMenuItemAfter(phoneBookWin.getPhonebookMenu(), "Print", itemPrintToPDF);
+            }
+
+            @Override
+            public PanelTreeNode createOptionsPanel(PanelTreeNode parent) {
                 /*
                  * This method must return a PanelTreeNode as shown below
                  * or null to not create an options page
@@ -275,21 +327,21 @@ public class EntryPoint {
                 return new PanelTreeNode(
                         parent, // Always pass the parent as first parameter
                         new PDFOptionsPanel(), // The actual UI component that implements the options panel. 
-                                                // This object *must* implement the OptionsPage interface.
+                        // This object *must* implement the OptionsPage interface.
                         Msgs._("PDF support (iText)"), // The text displayed in the tree view for this options page
                         loadIcon("pdf.png"));            // The icon displayed in the tree view for this options page
-	        }
-	        
-	        @Override
-	        public void saveOptions(Properties p) {
+            }
+
+            @Override
+            public void saveOptions(Properties p) {
                 getOptions().storeToProperties(p);
-	        }
+            }
         });
-	    
-	    FileConverters.invalidateFileConverters();
-		return true;
-	}
-	
+
+        FileConverters.invalidateFileConverters();
+        return true;
+    }
+
     public static ImageIcon loadIcon(String fileName) {
         URL imgURL = EntryPoint.class.getResource("/yajhfc/pdf/images/" + fileName);
         if (imgURL != null) {
@@ -298,47 +350,26 @@ public class EntryPoint {
             return null;
         }
     }
-	
-	private static PDFOptions options;
-	/**
-	 * Lazily load some options (optional, only if you want to save settings)
-	 * @return
-	 */
-	public static PDFOptions getOptions() {
-	    if (options == null) {
-	        options = new PDFOptions();
-	        options.loadFromProperties(Utils.getSettingsProperties());
-	    }
-	    return options;
-	}
-    
-	public static void insertAfter(JMenu menu, String actionCommandAfter, JMenuItem menuItem) {
-        int insertPos = indexOfAction(menu, actionCommandAfter);
-        if (insertPos < 0) {
-            insertPos = menu.getMenuComponentCount()-3;
+
+    private static PDFOptions options;
+    /**
+     * Lazily load some options (optional, only if you want to save settings)
+     * @return
+     */
+    public static PDFOptions getOptions() {
+        if (options == null) {
+            options = new PDFOptions();
+            options.loadFromProperties(Utils.getSettingsProperties());
         }
-        menu.insert(menuItem, insertPos+1);
-	}
-	
-	public static int indexOfAction(JMenu menu, String actionCommand) {
-	    for (int i=0; i<menu.getMenuComponentCount(); i++) {
-	        Component comp = menu.getMenuComponent(i);
-	        if (comp instanceof JMenuItem) {
-	            JMenuItem item = (JMenuItem)comp;
-	            if (actionCommand.equals(item.getActionCommand())) {
-	                return i;
-	            }
-	        }
-	    }
-	    return -1;
-	}
-	
+        return options;
+    }
+
     /**
      * Launches YajHFC including this plugin (for debugging purposes)
      * @param args
      */
     public static void main(String[] args) {
-		PluginManager.internalPlugins.add(EntryPoint.class);
-		Launcher2.main(args);
-	}
+        PluginManager.internalPlugins.add(EntryPoint.class);
+        Launcher2.main(args);
+    }
 }
