@@ -19,9 +19,7 @@ package yajhfc.pdf;
 
 import java.awt.print.PageFormat;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 
 import yajhfc.AbstractFaxOptions;
@@ -65,7 +63,7 @@ public class PDFOptions extends AbstractFaxOptions {
     public PaperSize paperSize = PaperSize.A4;
     public int orientation = PageFormat.PORTRAIT;
     
-    public String reportDir = "";
+    public String reportDir = System.getProperty("user.home");
     public String reportRecvPattern = "received-fax-%s-%Y.pdf";
     public String reportSentPattern = "sent-fax-%e-%Y.pdf";
     public final List<RecvFormat> reportRecvColumns = new ArrayList<RecvFormat>();
@@ -75,6 +73,7 @@ public class PDFOptions extends AbstractFaxOptions {
     public String reportSelectedPages = "";
     public boolean reportUnlimitedThumbs = true;
     public int reportThumbsPerPage = 4;
+    public boolean reportViewAfterGeneration = true;
     
     
 	/**

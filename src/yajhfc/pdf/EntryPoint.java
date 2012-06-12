@@ -21,8 +21,9 @@ package yajhfc.pdf;
 import java.awt.event.ActionEvent;
 import java.io.File;
 import java.net.URL;
-import java.text.MessageFormat;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Level;
@@ -51,6 +52,7 @@ import yajhfc.file.textextract.HylaToTextConverter;
 import yajhfc.file.textextract.pdf.ITextPDFToTextConverter;
 import yajhfc.launch.Launcher2;
 import yajhfc.model.FmtItem;
+import yajhfc.model.FmtItemList;
 import yajhfc.model.servconn.FaxJob;
 import yajhfc.model.ui.TooltipJTable;
 import yajhfc.options.PanelTreeNode;
@@ -64,7 +66,6 @@ import yajhfc.plugin.PluginManager;
 import yajhfc.plugin.PluginUI;
 import yajhfc.print.FaxTablePrinter;
 import yajhfc.print.PhonebooksPrinter;
-import yajhfc.print.tableprint.Alignment;
 import yajhfc.print.tableprint.TablePrintable;
 import yajhfc.util.ExcDialogAbstractAction;
 import yajhfc.util.ExceptionDialog;
@@ -118,31 +119,30 @@ public class EntryPoint {
             setEnabled(enable);
         }
         
-        @Override
+        @SuppressWarnings("rawtypes")
+		@Override
         protected void actualActionPerformed(ActionEvent e) {
             try {
                 MainWin mw = (MainWin)Launcher2.application;
                 TooltipJTable<? extends FmtItem> table = mw.getSelectedTable();
                 
-                if (!SendReportDialog.showSendReportDialog(mw, table.getRealModel().getColumns().getCompleteView().toArray(new FmtItem[0]), table.getRealModel().getTableType()))
+                final SendReport rpt = SendReportDialog.showSendReportDialog(mw, table.getRealModel().getColumns().getCompleteView().toArray(new FmtItem[0]), table.getRealModel().getTableType());
+                if (rpt == null)
                     return;
                 
-                final SendReport rpt = new SendReport<FmtItem>();
-                rpt.setThumbnailsPerPage(4);
-                rpt.getColumns().addAll(table.getRealModel().getColumns());
                 final FaxJob[] selectedJobs = table.getSelectedJobs();
-
+                final FmtItemList fil = table.getRealModel().getColumns();
 
                 ProgressWorker pw = new ProgressWorker() {
                     @Override
                     public void doWork() {
                         try {
                             rpt.setStatusWorker(this);
-                            for (FaxJob<? extends FmtItem> job : selectedJobs) {
-                                File outFile = new File("/tmp/test.pdf");
-                                rpt.createReport(job, outFile);
-
-                                FormattedFile ff = new FormattedFile(outFile);
+                            @SuppressWarnings("unchecked")
+							List<File> pdfs = rpt.generateReportsFor(Arrays.asList(selectedJobs), fil);
+                            
+                            for (File pdf : pdfs) {
+                                FormattedFile ff = new FormattedFile(pdf);
                                 ff.view();
                             }
                         } catch (Exception e2) {
@@ -301,6 +301,7 @@ public class EntryPoint {
             @Override
             public void configureMainWin(MainWin mainWin) {
                 insertMenuItemAfter(mainWin.getMenuFax(), "ViewLog", new JMenuItem(actShowReport));
+                insertMenuItemAfter(mainWin.getTablePopupMenu(), "ViewLog", new JMenuItem(actShowReport));
                 insertMenuItemAfter(mainWin.getMenuTable(), "PrintTable", new JMenuItem(actPrintTableToPDF));
                 
                 mainWin.getTabMain().addChangeListener(actShowReport);

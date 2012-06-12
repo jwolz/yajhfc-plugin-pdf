@@ -36,6 +36,7 @@ import yajhfc.file.MultiFileConvFormat;
 import yajhfc.file.MultiFileConverter;
 import yajhfc.file.UnknownFormatException;
 import yajhfc.model.FmtItem;
+import yajhfc.model.FmtItemList;
 import yajhfc.model.servconn.FaxDocument;
 import yajhfc.model.servconn.FaxJob;
 
@@ -54,7 +55,7 @@ import com.itextpdf.text.pdf.PdfWriter;
  */
 public class SendReport<T extends FmtItem> extends PdfDocWriter {    
     
-    protected final List<T> columns = new ArrayList<T>();
+    protected List<T> columns = new ArrayList<T>();
     
     /**
      * The selected pages. null or "" means all pages
@@ -73,6 +74,8 @@ public class SendReport<T extends FmtItem> extends PdfDocWriter {
     
     protected String headLine = _("Fax send report");
     
+    protected String directory;
+    protected String fileNamePattern;
     
     public SendReport() throws DocumentException, IOException {
         headerFont = BaseFont.createFont(BaseFont.HELVETICA_BOLD, BaseFont.WINANSI, BaseFont.NOT_EMBEDDED);
@@ -218,7 +221,34 @@ public class SendReport<T extends FmtItem> extends PdfDocWriter {
         return iPage;
     }
     
-    public void createReport(FaxJob<T> job, File pdfFile) throws IOException, ServerResponseException, UnknownFormatException, ConversionException, DocumentException {
+    /**
+     * Generates reports using the configured directory and file name patterns
+     * @param jobs
+     * @return The generated files
+     */
+    public List<File> generateReportsFor(Collection<FaxJob<T>> jobs, FmtItemList<T> columns) throws IOException, ServerResponseException, UnknownFormatException, ConversionException, DocumentException {
+    	List<File> result = new ArrayList<File>();
+    	FilenameGenerator<T> generator = new FilenameGenerator<T>(fileNamePattern, columns);
+    	// TODO: Kollision
+    	for (FaxJob<T> job : jobs) {
+    		File pdf = new File(directory, generator.getFilename(job));
+    		generateReportFor(job, pdf);
+    		result.add(pdf);
+    	}
+    	return result;
+    }
+    
+    /**
+     * Generates a report and saves it in the specified file
+     * @param job
+     * @param pdfFile
+     * @throws IOException
+     * @throws ServerResponseException
+     * @throws UnknownFormatException
+     * @throws ConversionException
+     * @throws DocumentException
+     */
+    public void generateReportFor(FaxJob<T> job, File pdfFile) throws IOException, ServerResponseException, UnknownFormatException, ConversionException, DocumentException {
         if (statusWorker != null) {
             statusWorker.updateNote(_("Calculating job information..."));
         }
@@ -329,6 +359,10 @@ public class SendReport<T extends FmtItem> extends PdfDocWriter {
     public List<T> getColumns() {
         return columns;
     }
+    
+    public void setColumns(List<T> columns) {
+		this.columns = columns;
+	}
 
     public int getThumbnailsPerPage() {
         return thumbnailsPerPage;
@@ -382,6 +416,22 @@ public class SendReport<T extends FmtItem> extends PdfDocWriter {
         this.selectedPages = selectedPages;
     }
 
+    public String getFileNamePattern() {
+		return fileNamePattern;
+	}
+    
+    public void setFileNamePattern(String fileNamePattern) {
+		this.fileNamePattern = fileNamePattern;
+	}
+    
+    public String getDirectory() {
+		return directory;
+	}
+    
+    public void setDirectory(String directory) {
+		this.directory = directory;
+	}
+    
     static class Row {
         public final String description;
         public final String value;

@@ -27,12 +27,14 @@ import java.awt.FlowLayout;
 import java.awt.Frame;
 import java.awt.event.ActionEvent;
 import java.io.File;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
@@ -71,6 +73,7 @@ public class SendReportDialog<T extends FmtItem> extends JDialog {
 	FileTextField ftfDirectory;
 	JTextField textFileNamePattern, textSelectedPages, textThumbnailsPerPage;
 	JRadioButton radAllPages, radSelectedPages, radUnlimitedThumbs, radLimitThumbs;
+	JCheckBox checkViewAfterGeneration;
 	
 	SelectionTableModel<T> colsModel;
 	
@@ -140,6 +143,7 @@ public class SendReportDialog<T extends FmtItem> extends JDialog {
 	    groupThumbs.add(radUnlimitedThumbs);
 	    groupThumbs.add(radLimitThumbs);
 	    
+	    checkViewAfterGeneration = new JCheckBox(_("Open generated PDFs in viewer"));
 
 	    colsModel = new SelectionTableModel<T>(columns);
 
@@ -211,7 +215,7 @@ public class SendReportDialog<T extends FmtItem> extends JDialog {
 	            {border, TableLayout.PREFERRED, border, TableLayout.PREFERRED, TableLayout.PREFERRED, TableLayout.FILL, border}
 	    };
 	    JPanel panelPages = new JPanel(new TableLayout(dLay), false);
-	    panelPages.setBorder(BorderFactory.createTitledBorder(_("Pages to print thumbnails for")));
+	    panelPages.setBorder(BorderFactory.createTitledBorder(_("Fax pages to print thumbnails for")));
 	    panelPages.add(radAllPages, "1,1,1,1,l,c");
 	    panelPages.add(radSelectedPages, "1,3,l,c");
 	    panelPages.add(textSelectedPages, "1,4,f,f");
@@ -222,18 +226,19 @@ public class SendReportDialog<T extends FmtItem> extends JDialog {
 	    
 	    dLay = new double[][] {
 	      {border, TableLayout.FILL, border, 0.33, border, 0.33, border},
-	      {border, TableLayout.PREFERRED, TableLayout.PREFERRED, border, TableLayout.PREFERRED, TableLayout.PREFERRED, border, TableLayout.FILL, border, TableLayout.PREFERRED, border}
+	      {border, TableLayout.PREFERRED, TableLayout.PREFERRED, border, TableLayout.PREFERRED, TableLayout.PREFERRED, border, TableLayout.PREFERRED, border, TableLayout.PREFERRED, border, TableLayout.FILL, border, TableLayout.PREFERRED, border}
 	    };
 	    JPanel contentPane = new JPanel(new TableLayout(dLay));
 	    Utils.addWithLabel(contentPane, ftfDirectory, _("Directory to save the reports in:"), "1,2,3,2,f,f");
-	    Utils.addWithLabel(contentPane, textFileNamePattern, _("Filename pattern:"), "5,2,5,2,f,f");
+	    Utils.addWithLabel(contentPane, textFileNamePattern, _("File name pattern:"), "5,2,5,2,f,f");
 	    
-	    Utils.addWithLabel(contentPane, scrollCols, _("Columns to print on report"), "1,5,1,9,f,f");
+	    Utils.addWithLabel(contentPane, scrollCols, _("Information to print on report"), "1,5,1,13,f,f");
 	    
 	    contentPane.add(panelPages, "3,5,3,5,f,f");
 	    contentPane.add(panelThumbs, "5,5,5,5,f,f");
 	    contentPane.add(panelPageSettings, "3,7,5,7,f,t");
-	    contentPane.add(panelButtons, "3,9,5,9,f,f");
+	    contentPane.add(checkViewAfterGeneration, "3,9,5,9,l,t");
+	    contentPane.add(panelButtons, "3,13,5,13,f,f");
 	    
 	    setContentPane(contentPane);
 	    setLocationByPlatform(true);
@@ -260,6 +265,12 @@ public class SendReportDialog<T extends FmtItem> extends JDialog {
 	    if (! (new File(ftfDirectory.getText()).isDirectory()) ) {
 	        JOptionPane.showMessageDialog(this, _("Please enter a existing directory to save the reports in."));
 	        ftfDirectory.getJTextField().requestFocusInWindow();
+	        return false;
+	    }
+	    
+	    if (textFileNamePattern.getText().length() == 0) {
+	        JOptionPane.showMessageDialog(this, _("Please enter a file name pattern to save the reports under."));
+	        textFileNamePattern.requestFocusInWindow();
 	        return false;
 	    }
 	    
@@ -290,12 +301,12 @@ public class SendReportDialog<T extends FmtItem> extends JDialog {
 	    
 	    switch (tt) {
 	    case RECEIVED:
-	        title = _("Received fax report");
+	        title = _("Fax receive report");
 	        selectedColumns = opts.reportRecvColumns;
 	        fileNamePattern = opts.reportRecvPattern;
 	        break;
 	    case SENT:
-	        title = _("Sent fax report");
+	        title = _("Fax send report");
 	        selectedColumns = opts.reportSentColumns;
 	        fileNamePattern = opts.reportSentPattern;
 	        break;
@@ -325,18 +336,74 @@ public class SendReportDialog<T extends FmtItem> extends JDialog {
 	        radSelectedPages.setSelected(true);
 	    }
 	    
+	    checkViewAfterGeneration.setSelected(opts.reportViewAfterGeneration);
+	    
 	    panelPageSettings.loadDefaults();
 	}
 	
-	public void writeToAndSaveDefaults(SendReport<T> sr) {
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public void writeToAndSaveDefaults(SendReport<T> sr, TableType tt) {
+	    String directory = ftfDirectory.getText();
+	    String fileNamePattern = textFileNamePattern.getText();
+	    String selectedPages = textSelectedPages.getText();
 	    
+	    boolean viewAfterGeneration = checkViewAfterGeneration.isSelected();
+	    boolean unlimitedThumbs = radUnlimitedThumbs.isSelected();
+	    boolean printAllPages = radAllPages.isSelected();
+	    
+	    int thumbnailsPerPage = Integer.parseInt(textThumbnailsPerPage.getText());
+	    
+	    List<T> selectedCols = Arrays.asList(colsModel.getSelectedObjects());
+	    
+	    PDFOptions opts = EntryPoint.getOptions();
+	    
+	    opts.reportDir = directory;
+	    opts.reportPrintAllPages = printAllPages;
+	    opts.reportSelectedPages = selectedPages;
+	    opts.reportThumbsPerPage = thumbnailsPerPage;
+	    opts.reportUnlimitedThumbs = unlimitedThumbs;
+	    opts.reportViewAfterGeneration = viewAfterGeneration;
+	    String reportTitle;
+	    switch (tt) {
+	    case RECEIVED:
+	    	reportTitle = _("Fax receive report");
+	        opts.reportRecvColumns.clear();
+	        opts.reportRecvColumns.addAll((List)selectedCols);
+	        opts.reportRecvPattern = fileNamePattern;
+	        break;
+	    case SENT:
+	    	reportTitle = _("Fax send report");
+	        opts.reportSentColumns.clear();
+	        opts.reportSentColumns.addAll((List)selectedCols);
+	        opts.reportSentPattern = fileNamePattern;
+	        break;
+	    default:
+	        throw new IllegalArgumentException("Only TableType SENT and RECEIVED supported!");
+	    }
+	    
+	    sr.setHeadLine(reportTitle);
+	    sr.setColumns(selectedCols);
+	    sr.setDirectory(directory);
+	    sr.setFileNamePattern(fileNamePattern);
+	    if (printAllPages) {
+	    	sr.setSelectedPages(null);
+	    } else {
+	    	sr.setSelectedPages(selectedPages);
+	    }
+	    if (unlimitedThumbs) {
+	    	sr.setThumbnailsPerPage(0);
+	    } else {
+	    	sr.setThumbnailsPerPage(thumbnailsPerPage);
+	    }
+	    
+	    panelPageSettings.writeToAndSaveDefaults(sr);
 	}
 	
-	public static <T extends FmtItem> boolean showSendReportDialog(Frame owner, T[] columns, TableType tt) {
+	public static <T extends FmtItem> SendReport<T> showSendReportDialog(Frame owner, T[] columns, TableType tt) {
 	    SendReportDialog<T> srd = new SendReportDialog<T>(owner, columns);
 	    srd.initializeValues(tt);
 	    srd.setVisible(true);
 	    srd.dispose();
-	    return false;
+	    return null;
 	}
 }
