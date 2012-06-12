@@ -17,8 +17,6 @@
  */
 package yajhfc.pdf.report;
 
-import static yajhfc.pdf.i18n.Msgs._;
-
 import java.awt.Graphics2D;
 import java.awt.print.PageFormat;
 import java.awt.print.Paper;
@@ -37,6 +35,8 @@ import yajhfc.pdf.i18n.Msgs;
 import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.pdf.PdfContentByte;
+import com.itextpdf.text.pdf.PdfCopy;
+import com.itextpdf.text.pdf.PdfReader;
 import com.itextpdf.text.pdf.PdfWriter;
 
 /**
@@ -48,17 +48,44 @@ public class PdfPrinter extends PdfDocWriter {
     protected String subject = "Report";
     
     public void printToPDF(Printable printable, File outputFile) throws DocumentException, IOException, PrinterException {
-        FileOutputStream outStream = new FileOutputStream(outputFile);
+        // First print to a temp file, which will have one "additional" page ...
+        File tempFile = File.createTempFile("print", ".pdf");
+        tempFile.deleteOnExit();
+        FileOutputStream tempStream = new FileOutputStream(tempFile);
+        int numberOfPages = printDoc(printable, tempStream, 0, new MessageFormat(Msgs._("Printing page {0}...")));
         
-        // Print 2 times: First to determine number of pages, then "really"
+        // ... then strip this additional page off 
         if (statusWorker != null) {
-            statusWorker.updateNote(_("Calculating number of pages..."));
+            statusWorker.updateNote(Msgs._("Writing output file..."));
         }
-        int numberOfPages = printDoc(printable, new NullOutputStream(), 0, new MessageFormat(Msgs._("Calculating page {0}...")));
-        if (statusWorker != null) {
-            statusWorker.updateNote(_("Writing PDF..."));
+        FileOutputStream outStream = new FileOutputStream(outputFile);
+        Document document = new Document();
+        PdfCopy copy = new PdfCopy(document, outStream);
+        document.addCreator(Utils.AppShortName + " " + Utils.AppVersion);
+        document.addSubject(subject);
+        document.open();
+        PdfReader reader = new PdfReader(tempFile.getPath());
+        // Strip off any "additional" pages (i.e. the last one)
+        for (int page = 1; page <= numberOfPages; page++) {
+            copy.addPage(copy.getImportedPage(reader, page));
         }
-        printDoc(printable, outStream, numberOfPages, new MessageFormat(Msgs._("Writing page {0}...")));
+        copy.freeReader(reader);
+        document.close();
+        outStream.close();
+        tempFile.delete();
+        
+
+        // Old implementation (Print 2 times, much slower than the method above...)
+//        FileOutputStream outStream = new FileOutputStream(outputFile);
+//        // Print 2 times: First to determine number of pages, then "really"
+//        if (statusWorker != null) {
+//            statusWorker.updateNote(_("Calculating number of pages..."));
+//        }
+//        int numberOfPages = printDoc(printable, new NullOutputStream(), 0, new MessageFormat(Msgs._("Calculating page {0}...")));
+//        if (statusWorker != null) {
+//            statusWorker.updateNote(_("Writing PDF..."));
+//        }
+//        printDoc(printable, outStream, numberOfPages, new MessageFormat(Msgs._("Writing page {0}...")));
     }
 
 

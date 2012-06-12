@@ -56,11 +56,10 @@ public class SendReport<T extends FmtItem> extends PdfDocWriter {
     
     protected final List<T> columns = new ArrayList<T>();
     
-    protected int startPage = 1;
     /**
-     * End page. 0 means all pages
+     * The selected pages. null or "" means all pages
      */
-    protected int endPage = 0; 
+    protected String selectedPages = null;
     /**
      * Number of thumbnails per page. 0 means unlimited (all on one page)
      */
@@ -274,11 +273,13 @@ public class SendReport<T extends FmtItem> extends PdfDocWriter {
         document.open();
         PdfContentByte cb = writer.getDirectContent();
         PdfReader reader = new PdfReader(tempPDF.getPath());
+        if (selectedPages != null && selectedPages.length()>0) {
+            reader.selectPages(selectedPages);
+        }
         
-        int firstPage = startPage;
+        int firstPage = 1;
         int lastPage = reader.getNumberOfPages();
-        if (endPage > 0 && lastPage > endPage)
-            lastPage = endPage;
+
         int totalOutPages;
         if (thumbnailsPerPage == 0) {
             totalOutPages = 1;
@@ -329,14 +330,6 @@ public class SendReport<T extends FmtItem> extends PdfDocWriter {
         return columns;
     }
 
-    public int getStartPage() {
-        return startPage;
-    }
-
-    public int getEndPage() {
-        return endPage;
-    }
-
     public int getThumbnailsPerPage() {
         return thumbnailsPerPage;
     }
@@ -350,18 +343,6 @@ public class SendReport<T extends FmtItem> extends PdfDocWriter {
         this.normalFontSize = normalFontSize;
     }
 
-
-    public void setStartPage(int startPage) {
-        if (startPage < 1)
-            throw new IllegalArgumentException("startPage must be >= 1");
-        this.startPage = startPage;
-    }
-
-    public void setEndPage(int endPage) {
-        if (endPage < 0)
-            throw new IllegalArgumentException("endPage must be >= 0");
-        this.endPage = endPage;
-    }
 
     public void setThumbnailsPerPage(int thumbnailsPerPage) {
         if (thumbnailsPerPage < 0)
@@ -391,6 +372,14 @@ public class SendReport<T extends FmtItem> extends PdfDocWriter {
     
     public void setHeadLine(String headLine) {
         this.headLine = headLine;
+    }
+    
+    public String getSelectedPages() {
+        return selectedPages;
+    }
+    
+    public void setSelectedPages(String selectedPages) {
+        this.selectedPages = selectedPages;
     }
 
     static class Row {

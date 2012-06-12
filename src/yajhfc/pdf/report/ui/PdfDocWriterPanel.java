@@ -98,7 +98,7 @@ public class PdfDocWriterPanel extends JPanel {
         panelPaperSize.add(radPortrait, "1,3,l,c");
         panelPaperSize.add(radLandscape, "1,5,l,c");
         
-        setLayout(new GridLayout(1, 2));
+        setLayout(new GridLayout(1, 2, border, border));
         add(panelMargins);
         add(panelPaperSize);
     }

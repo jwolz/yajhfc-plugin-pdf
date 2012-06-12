@@ -58,6 +58,7 @@ import yajhfc.pdf.i18n.Msgs;
 import yajhfc.pdf.report.PdfPrinter;
 import yajhfc.pdf.report.SendReport;
 import yajhfc.pdf.report.ui.PdfPrinterDialog;
+import yajhfc.pdf.report.ui.SendReportDialog;
 import yajhfc.phonebook.ui.NewPhoneBookWin;
 import yajhfc.plugin.PluginManager;
 import yajhfc.plugin.PluginUI;
@@ -122,6 +123,10 @@ public class EntryPoint {
             try {
                 MainWin mw = (MainWin)Launcher2.application;
                 TooltipJTable<? extends FmtItem> table = mw.getSelectedTable();
+                
+                if (!SendReportDialog.showSendReportDialog(mw, table.getRealModel().getColumns().getCompleteView().toArray(new FmtItem[0]), table.getRealModel().getTableType()))
+                    return;
+                
                 final SendReport rpt = new SendReport<FmtItem>();
                 rpt.setThumbnailsPerPage(4);
                 rpt.getColumns().addAll(table.getRealModel().getColumns());

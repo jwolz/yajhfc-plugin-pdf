@@ -18,10 +18,16 @@
 package yajhfc.pdf;
 
 import java.awt.print.PageFormat;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import yajhfc.AbstractFaxOptions;
 import yajhfc.PaperSize;
+import yajhfc.model.JobFormat;
+import yajhfc.model.RecvFormat;
 
 /**
  * Example class to save options in the YajHFC settings file if you need to.
@@ -58,6 +64,18 @@ public class PDFOptions extends AbstractFaxOptions {
     
     public PaperSize paperSize = PaperSize.A4;
     public int orientation = PageFormat.PORTRAIT;
+    
+    public String reportDir = "";
+    public String reportRecvPattern = "received-fax-%s-%Y.pdf";
+    public String reportSentPattern = "sent-fax-%e-%Y.pdf";
+    public final List<RecvFormat> reportRecvColumns = new ArrayList<RecvFormat>();
+    public final List<JobFormat> reportSentColumns = new ArrayList<JobFormat>();
+
+    public boolean reportPrintAllPages = true;
+    public String reportSelectedPages = "";
+    public boolean reportUnlimitedThumbs = true;
+    public int reportThumbsPerPage = 4;
+    
     
 	/**
 	 * Call the super constructor with the prefix that should be prepended
