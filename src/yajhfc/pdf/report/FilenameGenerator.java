@@ -17,7 +17,9 @@
  */
 package yajhfc.pdf.report;
 
+import java.io.File;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -26,17 +28,31 @@ import yajhfc.model.FmtItem;
 import yajhfc.model.FmtItemList;
 import yajhfc.model.servconn.FaxJob;
 import yajhfc.pdf.FilenameSanitizer;
+import yajhfc.pdf.i18n.Msgs;
 
 /**
  * @author jonas
  *
  */
 public class FilenameGenerator<T extends FmtItem> {
+    protected String directory;
 	protected Object[] parsedPattern;
 	
-	public FilenameGenerator(String patternString, FmtItemList<T> possibleValues) {
+	public FilenameGenerator() {
+    }
+	
+	public FilenameGenerator(String directory, String patternString, FmtItemList<T> possibleValues) {
 		setPatternString(patternString, possibleValues);
+		this.directory = directory;
 	}
+	
+	public String getDirectory() {
+        return directory;
+    }
+	
+	public void setDirectory(String directory) {
+        this.directory = directory;
+    }
 	
 	public void setPatternString(String patternString, FmtItemList<T> possibleValues) {
     	Pattern percentPattern = Pattern.compile("%(?:(.)|\\{(.+?)\\})");
@@ -73,16 +89,67 @@ public class FilenameGenerator<T extends FmtItem> {
 	}
 	
 	@SuppressWarnings("unchecked")
+	/**
+	 * Generates a file name for the given fax job
+	 * @param job
+	 * @return
+	 */
 	public String getFilename(FaxJob<T> job) {
 		StringBuilder sb = new StringBuilder();
 		for (Object o : parsedPattern) {
 			if (o instanceof FmtItem) {
-				sb.append(job.getData((T)o));
+			    T col = (T)o;
+			    Object data = job.getData(col);
+			    
+			    // Check if we need to reformat data
+			    if (data == null) {
+			        data = "";
+			    } else if (col.getDataType() == Date.class) {
+			        data = col.getDisplayDateFormat().format(data);
+			    } else if (col.getDataType() == Boolean.class) {
+			        data = ((Boolean)data).booleanValue() ? Msgs._("yes") : Msgs._("no");
+			    } 
+			        
+				sb.append(data);
 			} else {
 				sb.append(o);
 			}
 		}
 		return FilenameSanitizer.replaceInvalidCharacters(sb.toString(), '_');
+	}
+	
+	public File getFile(FaxJob<T> job) {
+	    return getFile(job, false);
+	}
+	
+	/**
+	 * Returns a File object for the given FaxJob
+	 * @param job
+	 * @param checkCollision false to check for "collision", i.e. to generate an unique name
+	 * @return
+	 */
+	public File getFile(FaxJob<T> job, boolean allowCollision) {
+	    String fileName = getFilename(job);
+	    File result = new File(directory, fileName);
+	    
+	    if (!allowCollision && result.exists()) {
+	        int pos = fileName.lastIndexOf('.'); // Find the position of the extension
+	        String prefix, suffix;
+	        if (pos >= 0) {
+	            prefix = fileName.substring(0,pos);
+	            suffix = fileName.substring(pos);
+	        } else {
+	            prefix = fileName;
+	            suffix = "";
+	        }
+	        
+	        int num = 1;
+	        do {
+	            // Generate a file name in the form file-2.pdf
+	            result = new File(directory, prefix + '-' + (++num) + suffix);
+	        } while (result.exists());
+	    }
+	    return result;
 	}
 }
 

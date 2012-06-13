@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.logging.Logger;
 
 import yajhfc.Utils;
 import yajhfc.file.FileConverter.ConversionException;
@@ -36,7 +37,6 @@ import yajhfc.file.MultiFileConvFormat;
 import yajhfc.file.MultiFileConverter;
 import yajhfc.file.UnknownFormatException;
 import yajhfc.model.FmtItem;
-import yajhfc.model.FmtItemList;
 import yajhfc.model.servconn.FaxDocument;
 import yajhfc.model.servconn.FaxJob;
 
@@ -54,6 +54,7 @@ import com.itextpdf.text.pdf.PdfWriter;
  *
  */
 public class SendReport<T extends FmtItem> extends PdfDocWriter {    
+    static final Logger log = Logger.getLogger(SendReport.class.getName());
     
     protected List<T> columns = new ArrayList<T>();
     
@@ -74,12 +75,10 @@ public class SendReport<T extends FmtItem> extends PdfDocWriter {
     
     protected String headLine = _("Fax send report");
     
-    protected String directory;
-    protected String fileNamePattern;
-    
     public SendReport() throws DocumentException, IOException {
         headerFont = BaseFont.createFont(BaseFont.HELVETICA_BOLD, BaseFont.WINANSI, BaseFont.NOT_EMBEDDED);
         normalFont = BaseFont.createFont(BaseFont.HELVETICA, BaseFont.WINANSI, BaseFont.NOT_EMBEDDED);
+        //headerFont = normalFont = BaseFont.createFont("/home/jonas/java/yajhfc/DroidSansFallbackFull.ttf", BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
     }
     
     /**
@@ -222,23 +221,6 @@ public class SendReport<T extends FmtItem> extends PdfDocWriter {
     }
     
     /**
-     * Generates reports using the configured directory and file name patterns
-     * @param jobs
-     * @return The generated files
-     */
-    public List<File> generateReportsFor(Collection<FaxJob<T>> jobs, FmtItemList<T> columns) throws IOException, ServerResponseException, UnknownFormatException, ConversionException, DocumentException {
-    	List<File> result = new ArrayList<File>();
-    	FilenameGenerator<T> generator = new FilenameGenerator<T>(fileNamePattern, columns);
-    	// TODO: Kollision
-    	for (FaxJob<T> job : jobs) {
-    		File pdf = new File(directory, generator.getFilename(job));
-    		generateReportFor(job, pdf);
-    		result.add(pdf);
-    	}
-    	return result;
-    }
-    
-    /**
      * Generates a report and saves it in the specified file
      * @param job
      * @param pdfFile
@@ -249,8 +231,14 @@ public class SendReport<T extends FmtItem> extends PdfDocWriter {
      * @throws DocumentException
      */
     public void generateReportFor(FaxJob<T> job, File pdfFile) throws IOException, ServerResponseException, UnknownFormatException, ConversionException, DocumentException {
+        if (Utils.debugMode) {
+            log.fine("Generating report for job " + job + " to file " + pdfFile);
+        }
         if (statusWorker != null) {
             statusWorker.updateNote(_("Calculating job information..."));
+        }
+        if (Utils.debugMode) {
+            log.fine("Columns: " + columns);
         }
         // Calculate rows for status table
         Row[] rows = new Row[columns.size()];
@@ -276,10 +264,15 @@ public class SendReport<T extends FmtItem> extends PdfDocWriter {
         if (statusWorker != null) {
             statusWorker.updateNote(_("Retrieving list of documents..."));
         }
+        log.fine("Retrieving list of documents...");
         Collection<FaxDocument> docs = job.getDocuments();
+        if (Utils.debugMode) {
+            log.fine("Documents are: " + docs);
+        }
         if (statusWorker != null) {
             statusWorker.updateNote(_("Downloading documents..."));
         }
+        log.fine("Downloading documents...");
         List<FormattedFile> files = new ArrayList<FormattedFile>(docs.size());
         for (FaxDocument doc : docs) {
             files.add(doc.getDocument());
@@ -287,6 +280,7 @@ public class SendReport<T extends FmtItem> extends PdfDocWriter {
         if (statusWorker != null) {
             statusWorker.updateNote(_("Converting documents to PDF..."));
         }
+        log.fine("Converting documents to PDF...");
         File tempPDF = File.createTempFile("report", ".pdf");
         tempPDF.deleteOnExit();
         MultiFileConverter.convertMultipleFilesToSingleFile(files, tempPDF, MultiFileConvFormat.PDF, paperSize);
@@ -294,6 +288,7 @@ public class SendReport<T extends FmtItem> extends PdfDocWriter {
         if (statusWorker != null) {
             statusWorker.updateNote(_("Creating PDF..."));
         }
+        log.fine("Creating PDF...");
         // Create the output PDF
         Document document = createPdfDocument();
         FileOutputStream outStream = new FileOutputStream(pdfFile);
@@ -304,6 +299,8 @@ public class SendReport<T extends FmtItem> extends PdfDocWriter {
         PdfContentByte cb = writer.getDirectContent();
         PdfReader reader = new PdfReader(tempPDF.getPath());
         if (selectedPages != null && selectedPages.length()>0) {
+            if (Utils.debugMode)
+                log.fine("Setting selectedPages to " + selectedPages);
             reader.selectPages(selectedPages);
         }
         
@@ -317,10 +314,14 @@ public class SendReport<T extends FmtItem> extends PdfDocWriter {
             totalOutPages = (reader.getNumberOfPages() + thumbnailsPerPage - 1) / thumbnailsPerPage;
         }
         int outPage = 1;
+        if (Utils.debugMode)
+            log.fine("lastPage=" + lastPage + "; totalOutPages=" + totalOutPages + "; thumbnailsPerPage=" + thumbnailsPerPage);
         while (firstPage <= lastPage) {
             if (statusWorker != null) {
                 statusWorker.updateNote(MessageFormat.format(_("Writing PDF page {0}..."), outPage));
             }
+            if (Utils.debugMode)
+                log.fine("Writing page " + outPage + "; firstPage=" + firstPage);
             document.newPage();
 
             float x = document.left();
@@ -415,22 +416,6 @@ public class SendReport<T extends FmtItem> extends PdfDocWriter {
     public void setSelectedPages(String selectedPages) {
         this.selectedPages = selectedPages;
     }
-
-    public String getFileNamePattern() {
-		return fileNamePattern;
-	}
-    
-    public void setFileNamePattern(String fileNamePattern) {
-		this.fileNamePattern = fileNamePattern;
-	}
-    
-    public String getDirectory() {
-		return directory;
-	}
-    
-    public void setDirectory(String directory) {
-		this.directory = directory;
-	}
     
     static class Row {
         public final String description;

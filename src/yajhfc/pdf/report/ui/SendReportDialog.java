@@ -19,6 +19,7 @@ package yajhfc.pdf.report.ui;
 
 import static yajhfc.options.OptionsWin.border;
 import static yajhfc.pdf.i18n.Msgs._;
+import gnu.inet.ftp.ServerResponseException;
 import info.clearthought.layout.TableLayout;
 
 import java.awt.Component;
@@ -27,8 +28,10 @@ import java.awt.FlowLayout;
 import java.awt.Frame;
 import java.awt.event.ActionEvent;
 import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.logging.Logger;
 
 import javax.swing.Action;
 import javax.swing.BorderFactory;
@@ -47,27 +50,35 @@ import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-import javax.swing.event.TableModelEvent;
-import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableCellRenderer;
 
 import yajhfc.FileTextField;
 import yajhfc.Utils;
+import yajhfc.file.FileConverter.ConversionException;
+import yajhfc.file.FormattedFile;
+import yajhfc.file.UnknownFormatException;
 import yajhfc.model.FmtItem;
+import yajhfc.model.FmtItemList;
 import yajhfc.model.TableType;
+import yajhfc.model.servconn.FaxJob;
 import yajhfc.pdf.EntryPoint;
 import yajhfc.pdf.PDFOptions;
+import yajhfc.pdf.report.FilenameGenerator;
 import yajhfc.pdf.report.SendReport;
 import yajhfc.util.CancelAction;
 import yajhfc.util.ExcDialogAbstractAction;
 import yajhfc.util.IntVerifier;
+import yajhfc.util.ProgressWorker;
 import yajhfc.util.SelectionTableModel;
+
+import com.itextpdf.text.DocumentException;
 
 /**
  * @author jonas
  *
  */
 public class SendReportDialog<T extends FmtItem> extends JDialog {
+    static final Logger log = Logger.getLogger(SendReportDialog.class.getName());
 
 	PdfDocWriterPanel panelPageSettings;
 	FileTextField ftfDirectory;
@@ -76,19 +87,25 @@ public class SendReportDialog<T extends FmtItem> extends JDialog {
 	JCheckBox checkViewAfterGeneration;
 	
 	SelectionTableModel<T> colsModel;
+	FmtItemList<T> columns;
+	TableType tableType;
 	
 	public boolean modalResult = false;
 	
-	public SendReportDialog(Frame owner, T[] columns) {
+	public SendReportDialog(Frame owner, FmtItemList<T> columns, TableType tableType) {
 	    super(owner, true);
-	    initialize(columns);
+	    this.columns = columns;
+	    this.tableType = tableType;
+	    initialize();
 	}
-	public SendReportDialog(Dialog owner, T[] columns) {
+	public SendReportDialog(Dialog owner, FmtItemList<T> columns, TableType tableType) {
 	    super(owner, true);
-	    initialize(columns);
+        this.columns = columns;
+        this.tableType = tableType;
+        initialize();
 	}
 	
-	private void initialize(T[] columns) {
+	private void initialize() {
 	    panelPageSettings = new PdfDocWriterPanel();
 	    
 	    ftfDirectory = new FileTextField();
@@ -145,15 +162,12 @@ public class SendReportDialog<T extends FmtItem> extends JDialog {
 	    
 	    checkViewAfterGeneration = new JCheckBox(_("Open generated PDFs in viewer"));
 
-	    colsModel = new SelectionTableModel<T>(columns);
+	    
+	    final T[] availableKeys = columns.getAvailableKeys();
+        colsModel = new SelectionTableModel<T>(availableKeys);
 
 	    JTable tableCols = createSelectionTable(colsModel);
-	    colsModel.addTableModelListener(new TableModelListener() {
-	        public void tableChanged(TableModelEvent e) {
-	            //checkEnabled();
-	        }
-	    });
-	    tableCols.setDefaultRenderer(FmtItem.class, new DefaultTableCellRenderer() {
+	    tableCols.setDefaultRenderer(availableKeys.getClass().getComponentType(), new DefaultTableCellRenderer() {
 	        @Override
 	        public Component getTableCellRendererComponent(JTable table,
 	                Object value, boolean isSelected, boolean hasFocus,
@@ -244,6 +258,8 @@ public class SendReportDialog<T extends FmtItem> extends JDialog {
 	    setLocationByPlatform(true);
 	    setSize(900, 500);
 	    setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+	    
+	    initializeValues();
 	}
 	
 	private JTable createSelectionTable(SelectionTableModel<?> model) {
@@ -293,13 +309,13 @@ public class SendReportDialog<T extends FmtItem> extends JDialog {
 	}
 	
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-    public void initializeValues(TableType tt) {
+    public void initializeValues() {
 	    String title;
 	    List selectedColumns;
 	    String fileNamePattern;
 	    PDFOptions opts = EntryPoint.getOptions();
 	    
-	    switch (tt) {
+	    switch (tableType) {
 	    case RECEIVED:
 	        title = _("Fax receive report");
 	        selectedColumns = opts.reportRecvColumns;
@@ -321,6 +337,7 @@ public class SendReportDialog<T extends FmtItem> extends JDialog {
 	        colsModel.selectAll();
 	    }
 	    
+	    ftfDirectory.setText(opts.reportDir);
 	    textFileNamePattern.setText(fileNamePattern);
 	    textSelectedPages.setText(opts.reportSelectedPages);
 	    textThumbnailsPerPage.setText(String.valueOf(opts.reportThumbsPerPage));
@@ -342,7 +359,7 @@ public class SendReportDialog<T extends FmtItem> extends JDialog {
 	}
 	
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public void writeToAndSaveDefaults(SendReport<T> sr, TableType tt) {
+	public void writeToAndSaveDefaults(SendReportDialogData<T> srd) {
 	    String directory = ftfDirectory.getText();
 	    String fileNamePattern = textFileNamePattern.getText();
 	    String selectedPages = textSelectedPages.getText();
@@ -364,7 +381,7 @@ public class SendReportDialog<T extends FmtItem> extends JDialog {
 	    opts.reportUnlimitedThumbs = unlimitedThumbs;
 	    opts.reportViewAfterGeneration = viewAfterGeneration;
 	    String reportTitle;
-	    switch (tt) {
+	    switch (tableType) {
 	    case RECEIVED:
 	    	reportTitle = _("Fax receive report");
 	        opts.reportRecvColumns.clear();
@@ -381,29 +398,66 @@ public class SendReportDialog<T extends FmtItem> extends JDialog {
 	        throw new IllegalArgumentException("Only TableType SENT and RECEIVED supported!");
 	    }
 	    
-	    sr.setHeadLine(reportTitle);
-	    sr.setColumns(selectedCols);
-	    sr.setDirectory(directory);
-	    sr.setFileNamePattern(fileNamePattern);
+	    //reportTitle = "äöüß 海納百 لى مستوى αναπτυχθεί  музыкальная";
+	    srd.report.setHeadLine(reportTitle);
+	    srd.report.setColumns(selectedCols);
+
 	    if (printAllPages) {
-	    	sr.setSelectedPages(null);
+	        srd.report.setSelectedPages(null);
 	    } else {
-	    	sr.setSelectedPages(selectedPages);
+	        srd.report.setSelectedPages(selectedPages);
 	    }
 	    if (unlimitedThumbs) {
-	    	sr.setThumbnailsPerPage(0);
+	        srd.report.setThumbnailsPerPage(0);
 	    } else {
-	    	sr.setThumbnailsPerPage(thumbnailsPerPage);
+	        srd.report.setThumbnailsPerPage(thumbnailsPerPage);
 	    }
 	    
-	    panelPageSettings.writeToAndSaveDefaults(sr);
+	    panelPageSettings.writeToAndSaveDefaults(srd.report);
+	    
+	    srd.generator.setDirectory(directory);
+	    srd.generator.setPatternString(fileNamePattern, columns);
+	    srd.viewAfterGeneration = viewAfterGeneration;
 	}
 	
-	public static <T extends FmtItem> SendReport<T> showSendReportDialog(Frame owner, T[] columns, TableType tt) {
-	    SendReportDialog<T> srd = new SendReportDialog<T>(owner, columns);
-	    srd.initializeValues(tt);
+	public static <T extends FmtItem> SendReportDialogData<T> showSendReportDialog(Frame owner, FmtItemList<T> columns, TableType tt) throws DocumentException, IOException {
+	    SendReportDialog<T> srd = new SendReportDialog<T>(owner, columns, tt);
 	    srd.setVisible(true);
-	    srd.dispose();
-	    return null;
+	    if (srd.modalResult) {
+	        SendReportDialogData<T> rv = new SendReportDialogData<T>(new SendReport<T>(), new FilenameGenerator<T>());
+	    	srd.writeToAndSaveDefaults(rv);
+	    	srd.dispose();
+	    	return rv;
+	    } else {
+	    	return null;
+	    }
+	}
+	
+	public static class SendReportDialogData<T extends FmtItem> {
+	    public final SendReport<T> report;
+	    public final FilenameGenerator<T> generator;
+	    public boolean viewAfterGeneration;
+	    
+	    public void generateReports(FaxJob<T>[] jobs, ProgressWorker statusWorker) throws IOException, ServerResponseException, UnknownFormatException, ConversionException, DocumentException {
+	        report.setStatusWorker(statusWorker);
+	        log.fine("Generating reports...");
+            for (FaxJob<T> job : jobs) {
+                log.fine("Generating report for job " + job);
+                File pdf = generator.getFile(job);
+                report.generateReportFor(job, pdf);
+                
+                if (viewAfterGeneration) {
+                    log.fine("Viewing report for job " + job);
+                    FormattedFile ff = new FormattedFile(pdf);
+                    ff.view();
+                }
+            }
+	    }
+	    
+        public SendReportDialogData(SendReport<T> report, FilenameGenerator<T> generator) {
+            super();
+            this.report = report;
+            this.generator = generator;
+        }
 	}
 }

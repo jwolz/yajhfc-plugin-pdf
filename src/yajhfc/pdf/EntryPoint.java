@@ -21,9 +21,7 @@ package yajhfc.pdf;
 import java.awt.event.ActionEvent;
 import java.io.File;
 import java.net.URL;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Level;
@@ -52,15 +50,14 @@ import yajhfc.file.textextract.HylaToTextConverter;
 import yajhfc.file.textextract.pdf.ITextPDFToTextConverter;
 import yajhfc.launch.Launcher2;
 import yajhfc.model.FmtItem;
-import yajhfc.model.FmtItemList;
 import yajhfc.model.servconn.FaxJob;
 import yajhfc.model.ui.TooltipJTable;
 import yajhfc.options.PanelTreeNode;
 import yajhfc.pdf.i18n.Msgs;
 import yajhfc.pdf.report.PdfPrinter;
-import yajhfc.pdf.report.SendReport;
 import yajhfc.pdf.report.ui.PdfPrinterDialog;
 import yajhfc.pdf.report.ui.SendReportDialog;
+import yajhfc.pdf.report.ui.SendReportDialog.SendReportDialogData;
 import yajhfc.phonebook.ui.NewPhoneBookWin;
 import yajhfc.plugin.PluginManager;
 import yajhfc.plugin.PluginUI;
@@ -119,32 +116,25 @@ public class EntryPoint {
             setEnabled(enable);
         }
         
-        @SuppressWarnings("rawtypes")
 		@Override
         protected void actualActionPerformed(ActionEvent e) {
             try {
                 MainWin mw = (MainWin)Launcher2.application;
                 TooltipJTable<? extends FmtItem> table = mw.getSelectedTable();
                 
-                final SendReport rpt = SendReportDialog.showSendReportDialog(mw, table.getRealModel().getColumns().getCompleteView().toArray(new FmtItem[0]), table.getRealModel().getTableType());
-                if (rpt == null)
+                final SendReportDialogData<? extends FmtItem> reportData = SendReportDialog.showSendReportDialog(mw, table.getRealModel().getColumns(), table.getRealModel().getTableType());
+                if (reportData == null)
                     return;
                 
+                @SuppressWarnings("rawtypes")
                 final FaxJob[] selectedJobs = table.getSelectedJobs();
-                final FmtItemList fil = table.getRealModel().getColumns();
 
                 ProgressWorker pw = new ProgressWorker() {
+                    @SuppressWarnings("unchecked")
                     @Override
                     public void doWork() {
                         try {
-                            rpt.setStatusWorker(this);
-                            @SuppressWarnings("unchecked")
-							List<File> pdfs = rpt.generateReportsFor(Arrays.asList(selectedJobs), fil);
-                            
-                            for (File pdf : pdfs) {
-                                FormattedFile ff = new FormattedFile(pdf);
-                                ff.view();
-                            }
+                            reportData.generateReports(selectedJobs, this);
                         } catch (Exception e2) {
                             ExceptionDialog.showExceptionDialog(Launcher2.application.getFrame(), Msgs._("Error generating report:"), e2);
                         }
