@@ -282,7 +282,7 @@ public class SendReport<T extends FmtItem> extends PdfDocWriter {
         }
         log.fine("Converting documents to PDF...");
         File tempPDF = File.createTempFile("report", ".pdf");
-        tempPDF.deleteOnExit();
+        yajhfc.shutdown.ShutdownManager.deleteOnExit(tempPDF);
         MultiFileConverter.convertMultipleFilesToSingleFile(files, tempPDF, MultiFileConvFormat.PDF, paperSize);
         
         if (statusWorker != null) {

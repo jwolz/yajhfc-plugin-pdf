@@ -50,7 +50,7 @@ public class PdfPrinter extends PdfDocWriter {
     public void printToPDF(Printable printable, File outputFile) throws DocumentException, IOException, PrinterException {
         // First print to a temp file, which will have one "additional" page ...
         File tempFile = File.createTempFile("print", ".pdf");
-        tempFile.deleteOnExit();
+        yajhfc.shutdown.ShutdownManager.deleteOnExit(tempFile);
         FileOutputStream tempStream = new FileOutputStream(tempFile);
         int numberOfPages = printDoc(printable, tempStream, 0, new MessageFormat(Msgs._("Printing page {0}...")));
         
