@@ -55,10 +55,6 @@ import com.itextpdf.text.Document;
  */
 public class PDFOptionsPanel extends AbstractOptionsPanel<FaxOptions> {   
     private static final Logger log = Logger.getLogger(PDFOptionsPanel.class.getName());
-    
-    public PDFOptionsPanel() {
-		super(false);
-	}
 
     JCheckBox checkUseForTIFF, checkUseForPNG, checkUseForJPEG, checkUseForGIF;
     
@@ -66,6 +62,11 @@ public class PDFOptionsPanel extends AbstractOptionsPanel<FaxOptions> {
     JTextField textChopThreshold, textChopFactor;
     
     NumberFormat floatFormat = NumberFormat.getNumberInstance();
+    
+    public PDFOptionsPanel() {
+        super(false);
+        PathAndViewPanel.requireTIFF2PDF = !EntryPoint.getOptions().useITextForTIFF;
+    }
     
     @Override
     protected void createOptionsUI() {
