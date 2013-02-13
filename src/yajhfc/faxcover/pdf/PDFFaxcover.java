@@ -39,18 +39,13 @@ import com.itextpdf.text.pdf.PdfStamper;
  */
 public class PDFFaxcover extends Faxcover {
     private static final Logger log = Logger.getLogger(PDFFaxcover.class.getName());
-    
-    protected PdfReader pdfReader;
-    
+        
     public PDFFaxcover(URL coverTemplate) {
         super(coverTemplate);
     }
     
     protected PdfReader getPdfReader() throws IOException {
-        if (pdfReader == null) {
-            pdfReader = new PdfReader(this.coverTemplate); // Cache the reader in case we make multiple cover pages from one template
-        }
-        return pdfReader;
+        return new PdfReader(this.coverTemplate); 
     }
 
     /* (non-Javadoc)
