@@ -43,7 +43,7 @@ import yajhfc.pdf.i18n.Msgs;
 import yajhfc.plugin.PluginManager;
 import yajhfc.plugin.PluginUI;
 
-import com.itextpdf.text.Document;
+import com.itextpdf.text.Version;
 
 /**
  * Example initialization class for a YajHFC plugin.
@@ -65,7 +65,7 @@ public class EntryPoint {
 	 */
 	public static boolean init(int startupMode) {
 	    if (Utils.debugMode) {
-	        Logger.getLogger(EntryPoint.class.getName()).info("iText version: " + Document.getVersion());
+	        Logger.getLogger(EntryPoint.class.getName()).info("iText version: " + Version.getInstance().getVersion());
 	    }
 	    
 	    Faxcover.supportedCoverFormats.put(FileFormat.PDF, PDFFaxcover.class);
@@ -74,7 +74,7 @@ public class EntryPoint {
 	        @Override
 	        public void addFileConvertersTo(Map<FileFormat, FileConverter> converters) {	            
 	            try {
-                    Document.getVersion();
+                    Version.getInstance().getVersion();
                 } catch (Throwable e) {
                     Logger.getLogger(EntryPoint.class.getName()).log(Level.SEVERE, "Could not initialize iText", e);
                     return;

@@ -45,10 +45,9 @@ import yajhfc.options.OptionsWin;
 import yajhfc.options.PathAndViewPanel;
 import yajhfc.util.ClipboardPopup;
 
-import com.itextpdf.text.Document;
+import com.itextpdf.text.Version;
 
 /**
- * Implements a crude and simple UI to set the three example options.
  * 
  * @author jonas
  *
@@ -160,7 +159,7 @@ public class PDFOptionsPanel extends AbstractOptionsPanel<FaxOptions> {
 
     private String getITextVersion() {
         try {
-            return Document.getVersion();
+            return Version.getInstance().getVersion();
         } catch (NoClassDefFoundError e) {
             return "ERROR: iText not found";
         } catch (Throwable e) {
