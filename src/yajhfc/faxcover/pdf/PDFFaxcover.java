@@ -27,9 +27,12 @@ import yajhfc.faxcover.Faxcover;
 import yajhfc.faxcover.tag.ConditionState;
 import yajhfc.faxcover.tag.ConditionalTag;
 import yajhfc.faxcover.tag.Tag;
+import yajhfc.pdf.EntryPoint;
+import yajhfc.pdf.PDFOptions;
 
 import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.pdf.AcroFields;
+import com.itextpdf.text.pdf.BaseFont;
 import com.itextpdf.text.pdf.PdfReader;
 import com.itextpdf.text.pdf.PdfStamper;
 
@@ -57,7 +60,16 @@ public class PDFFaxcover extends Faxcover {
             log.fine("Opening " + this.coverTemplate);
             PdfStamper filledOutForm = new PdfStamper(getPdfReader(), out);
 
+            BaseFont bf = null;
+            PDFOptions po = EntryPoint.getOptions();
+            if (po.useSubstitutionFont) {
+                bf = BaseFont.createFont(po.substitutionFontPath, BaseFont.IDENTITY_H, true);
+            }
+            
             AcroFields form = filledOutForm.getAcroFields();
+            
+            if (bf != null)
+                form.addSubstitutionFont(bf);
             for (String field : form.getFields().keySet()) {
                 Tag tag = Tag.availableTags.get(field.toLowerCase());
                 if (tag != null) {

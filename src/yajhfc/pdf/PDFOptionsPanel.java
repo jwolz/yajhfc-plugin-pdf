@@ -23,6 +23,7 @@ import info.clearthought.layout.TableLayout;
 import java.awt.Dimension;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.io.File;
 import java.text.MessageFormat;
 import java.text.NumberFormat;
 import java.text.ParseException;
@@ -39,11 +40,14 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 
 import yajhfc.FaxOptions;
+import yajhfc.FileTextField;
 import yajhfc.file.FileConverters;
 import yajhfc.options.AbstractOptionsPanel;
 import yajhfc.options.OptionsWin;
 import yajhfc.options.PathAndViewPanel;
 import yajhfc.util.ClipboardPopup;
+import yajhfc.util.ComponentEnabler;
+import yajhfc.util.ExampleFileFilter;
 
 import com.itextpdf.text.Version;
 
@@ -59,6 +63,8 @@ public class PDFOptionsPanel extends AbstractOptionsPanel<FaxOptions> {
     
     JCheckBox checkFitToPage, checkAssumePortrait, checkChopLongPage;
     JTextField textChopThreshold, textChopFactor;
+    JCheckBox checkUseSubstFont;
+    FileTextField ftfSubstFont;
     
     NumberFormat floatFormat = NumberFormat.getNumberInstance();
     
@@ -110,7 +116,7 @@ public class PDFOptionsPanel extends AbstractOptionsPanel<FaxOptions> {
         
         double[][] dLay = {
                 {OptionsWin.border, TableLayout.PREFERRED, OptionsWin.border, TableLayout.PREFERRED, TableLayout.FILL, OptionsWin.border},
-                {OptionsWin.border, TableLayout.PREFERRED, OptionsWin.border, TableLayout.PREFERRED, TableLayout.PREFERRED, TableLayout.FILL, OptionsWin.border}
+                {OptionsWin.border, TableLayout.PREFERRED, OptionsWin.border, TableLayout.PREFERRED, TableLayout.PREFERRED, OptionsWin.border, TableLayout.PREFERRED, TableLayout.PREFERRED, TableLayout.FILL, OptionsWin.border}
         };
     	setLayout(new TableLayout(dLay));
     	
@@ -151,10 +157,20 @@ public class PDFOptionsPanel extends AbstractOptionsPanel<FaxOptions> {
         tiffPanel.add(Box.createRigidArea(halfSpace));
         tiffPanel.add(textChopFactor);
 
+        checkUseSubstFont = new JCheckBox(_("Use the following substitution font for fax cover fields"));
+        ftfSubstFont = new FileTextField();
+        ftfSubstFont.getJTextField().addMouseListener(ClipboardPopup.DEFAULT_POPUP);
+        ftfSubstFont.setFileFilters(new ExampleFileFilter("ttf", _("TrueType fonts")));
+        ftfSubstFont.setEnabled(false);
+        
+        ComponentEnabler.installOn(checkUseSubstFont, true, ftfSubstFont);
+        
         add(checkBoxPanel, "1,1,1,1,f,t");
         add(tiffPanel, "3,1,3,1,f,t");
-        add(new JLabel(_("iText version used:")), "1,3,1,3,l,t");
-        add(new JLabel(getITextVersion()), "1,4,1,4,l,t");
+        add(checkUseSubstFont, "1,3,3,3,l,c");
+        add(ftfSubstFont, "1,4,3,4,f,c");
+        add(new JLabel(_("iText version used:")), "1,6,1,6,l,t");
+        add(new JLabel(getITextVersion()), "1,7,1,7,l,t");
     }
 
     private String getITextVersion() {
@@ -177,6 +193,7 @@ public class PDFOptionsPanel extends AbstractOptionsPanel<FaxOptions> {
         checkUseForPNG.setSelected(pdfOpt.useITextForPNG);
         checkUseForJPEG.setSelected(pdfOpt.useITextForJPEG);
         checkUseForTIFF.setSelected(pdfOpt.useITextForTIFF);
+        checkUseSubstFont.setSelected(pdfOpt.useSubstitutionFont);
         
         checkAssumePortrait.setSelected(pdfOpt.TIFFassumePortrait);
         checkChopLongPage.setSelected(pdfOpt.TIFFchopLongPage);
@@ -184,6 +201,8 @@ public class PDFOptionsPanel extends AbstractOptionsPanel<FaxOptions> {
         
         textChopFactor.setText(floatFormat.format(pdfOpt.TIFFchopFactor));
         textChopThreshold.setText(floatFormat.format(pdfOpt.TIFFchopThreshold));
+        
+        ftfSubstFont.setText(pdfOpt.substitutionFontPath);
         
         PathAndViewPanel.requireTIFF2PDF = !pdfOpt.useITextForTIFF;
     }
@@ -198,10 +217,13 @@ public class PDFOptionsPanel extends AbstractOptionsPanel<FaxOptions> {
         pdfOpt.useITextForPNG = checkUseForPNG.isSelected();
         pdfOpt.useITextForJPEG = checkUseForJPEG.isSelected();
         pdfOpt.useITextForTIFF = checkUseForTIFF.isSelected();
+        pdfOpt.useSubstitutionFont = checkUseSubstFont.isSelected();
         
         pdfOpt.TIFFassumePortrait = checkAssumePortrait.isSelected();
         pdfOpt.TIFFchopLongPage = checkChopLongPage.isSelected();
         pdfOpt.TIFFfitToPaperSize = checkFitToPage.isSelected();
+        
+        pdfOpt.substitutionFontPath = ftfSubstFont.getText();
         
         try {
             pdfOpt.TIFFchopFactor = floatFormat.parse(textChopFactor.getText()).floatValue();
@@ -242,6 +264,12 @@ public class PDFOptionsPanel extends AbstractOptionsPanel<FaxOptions> {
         } catch (ParseException e) {
             JOptionPane.showMessageDialog(optionsWin, _("The height factor must be a number."), _("PDF support (iText)"), JOptionPane.ERROR_MESSAGE);
             optionsWin.focusComponent(textChopFactor);
+            return false;
+        }
+        
+        if (checkUseSubstFont.isSelected() && !new File(ftfSubstFont.getText()).canRead()) {
+            JOptionPane.showMessageDialog(optionsWin, _("The selected substitution font does not exist."), _("PDF support (iText)"), JOptionPane.ERROR_MESSAGE);
+            optionsWin.focusComponent(ftfSubstFont.getJTextField());
             return false;
         }
         

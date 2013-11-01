@@ -46,6 +46,9 @@ public class PDFOptions extends AbstractFaxOptions {
     public float TIFFchopThreshold = 2f;
     public float TIFFchopFactor = 1.41f;
     
+    public boolean useSubstitutionFont = false;
+    public String substitutionFontPath = "";
+    
 	/**
 	 * Call the super constructor with the prefix that should be prepended
 	 * to the options name.
