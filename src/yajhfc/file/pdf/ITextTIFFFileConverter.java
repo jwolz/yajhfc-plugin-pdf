@@ -23,9 +23,11 @@ import java.io.OutputStream;
 import java.util.logging.Logger;
 
 import yajhfc.PaperSize;
-import yajhfc.Utils;
+import yajhfc.VersionInfo;
 import yajhfc.file.FileConverter;
 import yajhfc.file.FileFormat;
+import yajhfc.file.tiff.TIFFImageReader;
+import yajhfc.file.tiff.TIFFImageReaderFactory;
 import yajhfc.pdf.PDFOptions;
 
 import com.itextpdf.text.Document;
@@ -54,17 +56,15 @@ public class ITextTIFFFileConverter implements FileConverter {
             final Rectangle pageSize = PageSize.getRectangle(paperSize.name());
             Document document = new Document(pageSize, 0, 0, 0, 0);
             PdfWriter writer = PdfWriter.getInstance(document, destination);
-            document.addCreator(Utils.AppShortName + " " + Utils.AppVersion);
+            document.addCreator(VersionInfo.AppShortName + " " + VersionInfo.AppVersion);
             document.addSubject(inFile.getPath());
             document.open();
             PdfContentByte cb = writer.getDirectContent();
-            RandomAccessFileOrArray ra = new RandomAccessFileOrArray(inFile.getPath());
-            int pages = TiffImage.getNumberOfPages(ra);
-            log.fine("TIFF has " + pages + " pages");
-            for (int pg = 0; pg < pages; ++pg) {
-                Image img = TiffImage.getTiffImage(ra, pg + 1);
+            TIFFImageReader imgReader = TIFFImageReaderFactory.DEFAULT.createReader(inFile);
+            int pg = 1;
+            for (Image img : imgReader) {
                 if (img != null) {
-                    log.fine("Writing page " + (pg + 1));
+                    log.fine("Writing page " + pg);
                     if (options.TIFFfitToPaperSize) {
                         if (options.TIFFchopLongPage && checkCrop(document, cb, img, pageSize)) {
                             continue;
@@ -80,8 +80,9 @@ public class ITextTIFFFileConverter implements FileConverter {
                     cb.addImage(img);
                     //document.newPage();
                 }
+                pg++;
             }
-            ra.close();
+            imgReader.close();
             document.close();
         } catch (DocumentException e) {
             throw new ConversionException("DocumentException from iText received", e);

@@ -23,7 +23,7 @@ import java.io.OutputStream;
 import java.util.logging.Logger;
 
 import yajhfc.PaperSize;
-import yajhfc.Utils;
+import yajhfc.VersionInfo;
 import yajhfc.file.FileConverter;
 import yajhfc.file.FileFormat;
 
@@ -54,7 +54,7 @@ public class ITextImageFileConverter implements FileConverter {
             final Rectangle pageSize = PageSize.getRectangle(paperSize.name());
             Document document = new Document(pageSize);  
             PdfWriter writer = PdfWriter.getInstance(document, destination);  
-            document.addCreator(Utils.AppShortName + " " + Utils.AppVersion);
+            document.addCreator(VersionInfo.AppShortName + " " + VersionInfo.AppVersion);
             document.addSubject(inFile.getPath());
             writer.setStrictImageSequence(true);  
             document.open();  
