@@ -38,8 +38,6 @@ import com.itextpdf.text.Rectangle;
 import com.itextpdf.text.pdf.PdfContentByte;
 import com.itextpdf.text.pdf.PdfTemplate;
 import com.itextpdf.text.pdf.PdfWriter;
-import com.itextpdf.text.pdf.RandomAccessFileOrArray;
-import com.itextpdf.text.pdf.codec.TiffImage;
 
 public class ITextTIFFFileConverter implements FileConverter {
     private static final Logger log = Logger.getLogger(ITextTIFFFileConverter.class.getName());

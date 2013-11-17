@@ -59,7 +59,7 @@ import com.itextpdf.text.Version;
 public class PDFOptionsPanel extends AbstractOptionsPanel<FaxOptions> {   
     private static final Logger log = Logger.getLogger(PDFOptionsPanel.class.getName());
 
-    JCheckBox checkUseForTIFF, checkUseForPNG, checkUseForJPEG, checkUseForGIF;
+    JCheckBox checkUseForTIFF, checkUseForPNG, checkUseForJPEG, checkUseForGIF, checkEnableNativeLibTIFF;
     
     JCheckBox checkFitToPage, checkAssumePortrait, checkChopLongPage;
     JTextField textChopThreshold, textChopFactor;
@@ -86,6 +86,8 @@ public class PDFOptionsPanel extends AbstractOptionsPanel<FaxOptions> {
         checkUseForPNG = new JCheckBox(convFormat.format(new Object[] {"PNG"}));
         checkUseForGIF = new JCheckBox(convFormat.format(new Object[] {"GIF"}));
         checkUseForJPEG = new JCheckBox(convFormat.format(new Object[] {"JPEG"}));
+        checkEnableNativeLibTIFF = new JCheckBox(_("Use libtiff to read TIFF files"));
+        checkEnableNativeLibTIFF.setEnabled(EntryPoint.haveNativeLibTIFF);
         
         checkFitToPage = new JCheckBox(_("Fit TIFF to page size"));
         checkFitToPage.setSelected(true);
@@ -134,6 +136,8 @@ public class PDFOptionsPanel extends AbstractOptionsPanel<FaxOptions> {
         checkBoxPanel.add(checkUseForPNG);
         checkBoxPanel.add(Box.createRigidArea(spacer));
         checkBoxPanel.add(checkUseForTIFF);
+        checkBoxPanel.add(Box.createRigidArea(spacer));
+        checkBoxPanel.add(checkEnableNativeLibTIFF);
         
         JPanel tiffPanel = new JPanel();
         tiffPanel.setLayout(new BoxLayout(tiffPanel, BoxLayout.Y_AXIS));
@@ -194,6 +198,7 @@ public class PDFOptionsPanel extends AbstractOptionsPanel<FaxOptions> {
         checkUseForJPEG.setSelected(pdfOpt.useITextForJPEG);
         checkUseForTIFF.setSelected(pdfOpt.useITextForTIFF);
         checkUseSubstFont.setSelected(pdfOpt.useSubstitutionFont);
+        checkEnableNativeLibTIFF.setSelected(pdfOpt.enableNativeLibTIFF);
         
         checkAssumePortrait.setSelected(pdfOpt.TIFFassumePortrait);
         checkChopLongPage.setSelected(pdfOpt.TIFFchopLongPage);
@@ -218,6 +223,7 @@ public class PDFOptionsPanel extends AbstractOptionsPanel<FaxOptions> {
         pdfOpt.useITextForJPEG = checkUseForJPEG.isSelected();
         pdfOpt.useITextForTIFF = checkUseForTIFF.isSelected();
         pdfOpt.useSubstitutionFont = checkUseSubstFont.isSelected();
+        pdfOpt.enableNativeLibTIFF = checkEnableNativeLibTIFF.isSelected();
         
         pdfOpt.TIFFassumePortrait = checkAssumePortrait.isSelected();
         pdfOpt.TIFFchopLongPage = checkChopLongPage.isSelected();

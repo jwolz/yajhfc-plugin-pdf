@@ -38,7 +38,7 @@ public class PDFOptions extends AbstractFaxOptions {
     public boolean useITextForGIF = true;
     public boolean useITextForPNG = true;
     public boolean useITextForJPEG = true;
-	
+	public boolean enableNativeLibTIFF = true;
     
     public boolean TIFFfitToPaperSize = true;
     public boolean TIFFassumePortrait = true;

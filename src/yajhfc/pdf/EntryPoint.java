@@ -55,6 +55,11 @@ import com.itextpdf.text.Version;
  */
 public class EntryPoint {
 
+    /**
+     * Flag if native libtiff support is available
+     */
+    public static boolean haveNativeLibTIFF=false;
+    
 	/**
 	 * Plugin initialization method.
 	 * The name and signature of this method must be exactly as follows 

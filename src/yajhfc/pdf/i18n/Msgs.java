@@ -17,12 +17,6 @@
  */
 package yajhfc.pdf.i18n;
 
-import java.util.Locale;
-import java.util.ResourceBundle;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import yajhfc.Utils;
 import yajhfc.util.MsgBundle;
 
 /**
