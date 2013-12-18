@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2013-12-18 10:31+0100\n"
-"PO-Revision-Date: 2012-01-03 09:47+0100\n"
+"PO-Revision-Date: 2013-12-18 10:56+0100\n"
 "Last-Translator: Jonas Wolz <jonas.wolz@freenet.de>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: \n"
@@ -32,7 +32,7 @@ msgstr "iText für Konvertierung {0}→PDF benutzen"
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:89
 msgid "Use libtiff to read TIFF files"
-msgstr ""
+msgstr "LibTIFF zum Lesen von TIFF-Dateien verwenden"
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:92
 msgid "Fit TIFF to page size"
@@ -72,11 +72,11 @@ msgstr "Höhenfaktor für aufgeteilte Seiten:"
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:164
 msgid "Use the following substitution font for fax cover fields"
-msgstr ""
+msgstr "Die folgende Ersatzschriftart für Faxdeckblattfelder verwenden:"
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:167
 msgid "TrueType fonts"
-msgstr ""
+msgstr "TrueType-Schriften"
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:176
 msgid "iText version used:"
@@ -84,7 +84,7 @@ msgstr "Benutzte iText-Version:"
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:178
 msgid "libtiff version used:"
-msgstr ""
+msgstr "Verwendete libtiff-Version:"
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:255
 msgid "The long page threshold must be between 0 and 1000."
@@ -96,8 +96,7 @@ msgstr "Der Schwellwert für lange Seiten muss eine Zahl sein."
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:268
 msgid "The height factor must be between 0 and 1000."
-msgstr ""
-"Der Höhenfaktor für aufgeteilte Seiten muss zwischen 0 und 1000 liegen."
+msgstr "Der Höhenfaktor für aufgeteilte Seiten muss zwischen 0 und 1000 liegen."
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:273
 msgid "The height factor must be a number."
@@ -105,4 +104,5 @@ msgstr "Der Höhenfaktor für aufgeteilte Seiten muss eine Zahl sein."
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:279
 msgid "The selected substitution font does not exist."
-msgstr ""
+msgstr "Die ausgewählte Ersatzschriftart existiert nicht."
+
