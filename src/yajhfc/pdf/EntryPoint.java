@@ -60,6 +60,11 @@ public class EntryPoint {
      */
     public static boolean haveNativeLibTIFF=false;
     
+    /**
+     * Version of native TIFF library
+     */
+    public static String nativeTIFFVersion="libtiff plugin not installed";
+    
 	/**
 	 * Plugin initialization method.
 	 * The name and signature of this method must be exactly as follows 

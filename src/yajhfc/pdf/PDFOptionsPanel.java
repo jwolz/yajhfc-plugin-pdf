@@ -118,7 +118,7 @@ public class PDFOptionsPanel extends AbstractOptionsPanel<FaxOptions> {
         
         double[][] dLay = {
                 {OptionsWin.border, TableLayout.PREFERRED, OptionsWin.border, TableLayout.PREFERRED, TableLayout.FILL, OptionsWin.border},
-                {OptionsWin.border, TableLayout.PREFERRED, OptionsWin.border, TableLayout.PREFERRED, TableLayout.PREFERRED, OptionsWin.border, TableLayout.PREFERRED, TableLayout.PREFERRED, TableLayout.FILL, OptionsWin.border}
+                {OptionsWin.border, TableLayout.PREFERRED, OptionsWin.border, TableLayout.PREFERRED, TableLayout.PREFERRED, OptionsWin.border, TableLayout.PREFERRED, TableLayout.PREFERRED, OptionsWin.border, TableLayout.PREFERRED, TableLayout.PREFERRED, TableLayout.FILL, OptionsWin.border}
         };
     	setLayout(new TableLayout(dLay));
     	
@@ -175,6 +175,8 @@ public class PDFOptionsPanel extends AbstractOptionsPanel<FaxOptions> {
         add(ftfSubstFont, "1,4,3,4,f,c");
         add(new JLabel(_("iText version used:")), "1,6,1,6,l,t");
         add(new JLabel(getITextVersion()), "1,7,1,7,l,t");
+        add(new JLabel(_("libtiff version used:")), "1,9,1,9,l,t");
+        add(new JLabel("<html>" + EntryPoint.nativeTIFFVersion.replace("\n", "<br>") + "</html>"), "1,10,1,10,l,t");
     }
 
     private String getITextVersion() {
