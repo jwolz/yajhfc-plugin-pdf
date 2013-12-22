@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2013-12-18 10:31+0100\n"
-"PO-Revision-Date: 2013-12-18 10:56+0100\n"
+"PO-Revision-Date: 2013-12-19 10:16+0100\n"
 "Last-Translator: Jonas Wolz <jonas.wolz@freenet.de>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: \n"
@@ -80,7 +80,7 @@ msgstr "TrueType-Schriften"
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:176
 msgid "iText version used:"
-msgstr "Benutzte iText-Version:"
+msgstr "Verwendete iText-Version:"
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:178
 msgid "libtiff version used:"

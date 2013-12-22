@@ -21,6 +21,7 @@ package yajhfc.pdf;
 import java.net.URL;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -63,7 +64,7 @@ public class EntryPoint {
     /**
      * Version of native TIFF library
      */
-    public static String nativeTIFFVersion="libtiff plugin not installed";
+    public static Future<String> nativeTIFFVersion=null;
     
 	/**
 	 * Plugin initialization method.

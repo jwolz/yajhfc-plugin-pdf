@@ -176,15 +176,28 @@ public class PDFOptionsPanel extends AbstractOptionsPanel<FaxOptions> {
         add(new JLabel(_("iText version used:")), "1,6,1,6,l,t");
         add(new JLabel(getITextVersion()), "1,7,1,7,l,t");
         add(new JLabel(_("libtiff version used:")), "1,9,1,9,l,t");
-        add(new JLabel("<html>" + EntryPoint.nativeTIFFVersion.replace("\n", "<br>") + "</html>"), "1,10,1,10,l,t");
+        String nativeTIFFVersion;
+        if (EntryPoint.nativeTIFFVersion != null) {
+            try {
+                nativeTIFFVersion = EntryPoint.nativeTIFFVersion.get();
+            } catch (Exception e1) {
+                log.log(Level.WARNING, "Error getting TIFF Version", e1);
+                nativeTIFFVersion = e1.toString();
+            }
+        } else {
+            nativeTIFFVersion = "libtiff plugin not installed";
+        }
+        add(new JLabel("<html>" + nativeTIFFVersion.replace("\n", "<br>") + "</html>"), "1,10,1,10,l,t");
     }
 
     private String getITextVersion() {
         try {
             return Version.getInstance().getVersion();
         } catch (NoClassDefFoundError e) {
+            log.log(Level.WARNING, "Error getting iText Version", e);
             return "ERROR: iText not found";
         } catch (Throwable e) {
+            log.log(Level.WARNING, "Error getting iText Version", e);
             return e.getClass().getName() + " initializing iText";
         }
     }
