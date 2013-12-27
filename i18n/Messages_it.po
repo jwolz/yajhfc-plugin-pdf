@@ -5,16 +5,17 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
+"Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2013-12-18 10:31+0100\n"
-"PO-Revision-Date: 2012-06-06 14:53+0100\n"
+"PO-Revision-Date: 2013-12-27 09:43+0100\n"
 "Last-Translator: Giulio Orsero <giulioo@pobox.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
+"Language: it\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 1.6.3\n"
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/EntryPoint.java:125
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:255
@@ -32,7 +33,7 @@ msgstr "Usa iText per convertire {0}→PDF"
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:89
 msgid "Use libtiff to read TIFF files"
-msgstr ""
+msgstr "Utilizza libtiff per leggere i file TIFF"
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:92
 msgid "Fit TIFF to page size"
@@ -74,11 +75,11 @@ msgstr "Altezza pagine divise:"
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:164
 msgid "Use the following substitution font for fax cover fields"
-msgstr ""
+msgstr "Utilizza il seguente font sostitutivo per i campi della copertina fax"
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:167
 msgid "TrueType fonts"
-msgstr ""
+msgstr "Font TrueType"
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:176
 msgid "iText version used:"
@@ -86,7 +87,7 @@ msgstr "Versione iText utilizzata:"
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:178
 msgid "libtiff version used:"
-msgstr ""
+msgstr "Versione libtiff utilizzata:"
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:255
 msgid "The long page threshold must be between 0 and 1000."
@@ -106,4 +107,4 @@ msgstr "L'altezza deve essere un numero."
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:279
 msgid "The selected substitution font does not exist."
-msgstr ""
+msgstr "Il font sostitutivo selezionato non esiste."
