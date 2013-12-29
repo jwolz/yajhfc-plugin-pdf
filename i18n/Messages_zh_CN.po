@@ -1,21 +1,21 @@
-# Spanish/Spain translation of PACKAGE.
-# Copyright (C) 2012 THE PACKAGE'S COPYRIGHT HOLDER
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-# Elsa Andrés <e.andres@ist-sci.com>, 2013.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: yajhfc 0.5.5\n"
+"Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2013-12-18 10:31+0100\n"
-"PO-Revision-Date: 2013-12-29 11:26+0200\n"
-"Last-Translator: Elsa Andrés <e.andres@ist-sci.com>\n"
-"Language-Team: Spanish <yajhfc-translators@lists.berlios.de>\n"
-"Language: es\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Virtaal 0.7.1\n"
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/EntryPoint.java:125
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:255
@@ -24,87 +24,85 @@ msgstr ""
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:273
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:279
 msgid "PDF support (iText)"
-msgstr "Soporte PDF (iText)"
+msgstr ""
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:78
 #, java-format
 msgid "Use iText to convert {0}→PDF"
-msgstr "Utilizar iText para convertir {0} → PDF"
+msgstr ""
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:89
 msgid "Use libtiff to read TIFF files"
-msgstr "Utilizar libtiff para visualizar archivos TIFF"
+msgstr ""
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:92
 msgid "Fit TIFF to page size"
-msgstr "Ajustar TIFF al tamaño de la página"
+msgstr ""
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:107
 msgid "Always use portrait orientation"
-msgstr "Utilizar siempre orientación vertical"
+msgstr ""
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:108
 msgid "Chop long TIFFs into several pages"
-msgstr "Recortar TIFF largos en varias páginas"
+msgstr ""
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:113
 msgid "The TIFF will be chopped into chunks [width] * [this value] heigh"
-msgstr "El TIFF se recortará en partes de [ancho] * alto [este valor]"
+msgstr ""
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:116
 msgid "Chop TIFF into multiple pages if [height] > [width] * [this value]"
-msgstr "Recortar TIFF en múltiples páginas si [alto] > [ancho] * [este valor]"
+msgstr ""
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:128
 msgid "File converters"
-msgstr "Conversores de archivo"
+msgstr ""
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:145
 msgid "TIFF→PDF options"
-msgstr "Opciones de TIFF → PDF"
+msgstr ""
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:156
 msgid "Long page threshold factor:"
-msgstr "Factor del umbral de longitud de página:"
+msgstr ""
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:160
 msgid "Height factor for chopped pages:"
-msgstr "Factor de altura para las páginas recortadas:"
+msgstr ""
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:164
 msgid "Use the following substitution font for fax cover fields"
 msgstr ""
-"Utilizar el siguiente tipo de letra de sustitución para los campos de la "
-"portada del fax"
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:167
 msgid "TrueType fonts"
-msgstr "Tipos de letra TrueType"
+msgstr ""
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:176
 msgid "iText version used:"
-msgstr "Versión de iText utilizada:"
+msgstr ""
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:178
 msgid "libtiff version used:"
-msgstr "Versión de libtiff utilizada:"
+msgstr ""
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:255
 msgid "The long page threshold must be between 0 and 1000."
-msgstr "El umbral de longitud de página debe ser un valor entre 0 y 1000."
+msgstr ""
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:260
 msgid "The long page threshold must be a number."
-msgstr "El umbral de longitud de página debe ser un número."
+msgstr ""
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:268
 msgid "The height factor must be between 0 and 1000."
-msgstr "El factor de altura de la página debe ser un valor entre 0 y 1000."
+msgstr ""
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:273
 msgid "The height factor must be a number."
-msgstr "El factor de altura debe ser un número."
+msgstr ""
 
 #: /home/jonas/java/workspace/yajhfc-pdf-plugin/src/yajhfc/pdf/PDFOptionsPanel.java:279
 msgid "The selected substitution font does not exist."
-msgstr "El tipo de letra de sustitución que ha seleccionado no existe."
+msgstr ""
