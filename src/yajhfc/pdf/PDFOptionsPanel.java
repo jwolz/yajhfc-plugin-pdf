@@ -174,7 +174,7 @@ public class PDFOptionsPanel extends AbstractOptionsPanel<FaxOptions> {
         add(checkUseSubstFont, "1,3,3,3,l,c");
         add(ftfSubstFont, "1,4,3,4,f,c");
         add(new JLabel(_("iText version used:")), "1,6,1,6,l,t");
-        add(new JLabel(getITextVersion()), "1,7,1,7,l,t");
+        add(new JLabel(getITextVersion()), "1,7,3,7,l,t");
         add(new JLabel(_("libtiff version used:")), "1,9,1,9,l,t");
         String nativeTIFFVersion;
         if (EntryPoint.nativeTIFFVersion != null) {
@@ -187,7 +187,7 @@ public class PDFOptionsPanel extends AbstractOptionsPanel<FaxOptions> {
         } else {
             nativeTIFFVersion = "libtiff plugin not installed";
         }
-        add(new JLabel("<html>" + nativeTIFFVersion.replace("\n", "<br>") + "</html>"), "1,10,1,10,l,t");
+        add(new JLabel("<html>" + nativeTIFFVersion.replace("\n", "<br>") + "</html>"), "1,10,3,10,l,t");
     }
 
     private String getITextVersion() {
