@@ -5,3 +5,5 @@ syntax: regexp
 \.mo$
 syntax: regexp
 ^i18n/bin/yajhfc$
+syntax: regexp
+\.po~$
