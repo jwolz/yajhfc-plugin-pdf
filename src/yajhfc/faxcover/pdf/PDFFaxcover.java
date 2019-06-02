@@ -70,6 +70,8 @@ public class PDFFaxcover extends Faxcover {
             
             if (bf != null)
                 form.addSubstitutionFont(bf);
+            form.setGenerateAppearances(true);
+            
             for (String field : form.getFields().keySet()) {
                 Tag tag = Tag.availableTags.get(field.toLowerCase());
                 if (tag != null) {
@@ -82,7 +84,8 @@ public class PDFFaxcover extends Faxcover {
                     log.info("Unknown form field \"" + field + "\" found, ignoring it.");
                 }
             }
-
+            
+            filledOutForm.setFormFlattening(true);
             filledOutForm.close();
         } catch (DocumentException e) {
             throw (IOException)new IOException("Error from iText").initCause(e);
